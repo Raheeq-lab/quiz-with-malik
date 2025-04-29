@@ -21,44 +21,45 @@ const StudentJoin: React.FC = () => {
     if (!accessCode.trim() || !studentName.trim()) {
       toast({
         title: "Information required",
-        description: "Please enter both your name and the access code.",
+        description: "Please enter both your name and the quiz code.",
         variant: "destructive",
       });
       setIsJoining(false);
       return;
     }
     
-    // Check if access code exists (in a real app, this would be an API call)
-    const savedClasses = localStorage.getItem('quizHubClasses');
-    const classes = savedClasses ? JSON.parse(savedClasses) : [];
-    const matchingClass = classes.find((c: any) => c.accessCode === accessCode.toUpperCase());
+    // Check if quiz code exists (in a real app, this would be an API call to Firebase)
+    const savedQuizzes = localStorage.getItem('mathWithMalikQuizzes');
+    const quizzes = savedQuizzes ? JSON.parse(savedQuizzes) : [];
+    const matchingQuiz = quizzes.find((q: any) => q.accessCode === accessCode.toUpperCase());
     
-    if (!matchingClass) {
+    if (!matchingQuiz) {
       toast({
-        title: "Invalid access code",
-        description: "The access code you entered doesn't match any active class.",
+        title: "Invalid quiz code",
+        description: "The quiz code you entered doesn't match any active quiz.",
         variant: "destructive",
       });
       setIsJoining(false);
       return;
     }
     
-    // Store student information
-    localStorage.setItem('quizHubStudent', JSON.stringify({
+    // Store student information for the quiz
+    localStorage.setItem('mathWithMalikStudent', JSON.stringify({
       name: studentName,
-      classId: matchingClass.id,
-      className: matchingClass.name,
+      quizId: matchingQuiz.id,
+      quizTitle: matchingQuiz.title,
+      gradeLevel: matchingQuiz.gradeLevel,
       joinedAt: new Date().toISOString()
     }));
     
     setTimeout(() => {
       toast({
         title: "Successfully joined!",
-        description: `You've joined ${matchingClass.name}.`,
+        description: `You've joined ${matchingQuiz.title}.`,
       });
       setIsJoining(false);
-      navigate('/student-quiz'); // In a real app, this would navigate to the quiz interface
-    }, 1500);
+      navigate('/student-quiz'); 
+    }, 1000);
   };
   
   return (
@@ -68,9 +69,9 @@ const StudentJoin: React.FC = () => {
       <main className="flex-1 flex items-center justify-center p-4 bg-quiz-light">
         <Card className="w-full max-w-md shadow-lg animate-fade-in">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl gradient-text">Join a Quiz</CardTitle>
+            <CardTitle className="text-2xl gradient-text">Join Math Quiz</CardTitle>
             <CardDescription>
-              Enter the access code provided by your teacher
+              Enter the quiz code provided by your teacher
             </CardDescription>
           </CardHeader>
           
@@ -91,7 +92,7 @@ const StudentJoin: React.FC = () => {
               
               <div className="space-y-2">
                 <label htmlFor="accessCode" className="block text-sm font-medium">
-                  Access Code
+                  Quiz Code
                 </label>
                 <Input
                   id="accessCode"
@@ -109,16 +110,16 @@ const StudentJoin: React.FC = () => {
                 className="w-full bg-quiz-teal hover:bg-opacity-90"
                 disabled={isJoining}
               >
-                {isJoining ? "Joining..." : "Join Quiz"}
+                {isJoining ? "Joining..." : "Start Quiz"}
               </Button>
             </form>
             
             <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
               <h3 className="font-semibold text-sm text-gray-700 mb-2">How to join:</h3>
               <ol className="text-sm text-gray-600 space-y-2 list-decimal pl-5">
-                <li>Enter your name so your teacher knows who you are</li>
-                <li>Enter the 6-digit code provided by your teacher</li>
-                <li>Click "Join Quiz" to enter the classroom</li>
+                <li>Enter your name so your teacher can identify you</li>
+                <li>Enter the 6-digit quiz code provided by your teacher</li>
+                <li>Click "Start Quiz" to begin</li>
               </ol>
             </div>
           </CardContent>

@@ -15,6 +15,7 @@ const TeacherSignup: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    school: '',
     password: '',
     confirmPassword: '',
   });
@@ -59,7 +60,7 @@ const TeacherSignup: React.FC = () => {
     if (selectedGrades.length === 0) {
       toast({
         title: "No grades selected",
-        description: "Please select at least one grade level.",
+        description: "Please select at least one grade level you teach.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -68,17 +69,18 @@ const TeacherSignup: React.FC = () => {
     
     // Simulate signup process
     setTimeout(() => {
-      // In a real app, this would be an API call
+      // In a real app, this would be an API call to Firebase
       toast({
         title: "Account created!",
-        description: "Welcome to Olympiad by Malik. You can now create and manage quizzes.",
+        description: "Welcome to Math with Malik. You can now create and manage math quizzes.",
       });
       
-      // Store mock user data (in a real app, this would be handled by authentication system)
-      localStorage.setItem('olympiadTeacher', JSON.stringify({
+      // Store mock user data (in a real app, this would be handled by Firebase authentication)
+      localStorage.setItem('mathWithMalikTeacher', JSON.stringify({
         id: 'teacher-' + Date.now(),
         name: formData.name,
         email: formData.email,
+        school: formData.school,
         grades: selectedGrades,
         isAuthenticated: true
       }));
@@ -95,9 +97,9 @@ const TeacherSignup: React.FC = () => {
       <main className="flex-1 flex items-center justify-center p-4 bg-quiz-light">
         <Card className="w-full max-w-md shadow-lg card-hover">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl gradient-text">Teacher Sign Up</CardTitle>
+            <CardTitle className="text-2xl gradient-text">Math Teacher Sign Up</CardTitle>
             <CardDescription>
-              Create an account to start building quizzes for your students
+              Create an account to build math quizzes for your students
             </CardDescription>
           </CardHeader>
           
@@ -129,6 +131,18 @@ const TeacherSignup: React.FC = () => {
               </div>
               
               <div className="space-y-2">
+                <Label htmlFor="school">School Name</Label>
+                <Input
+                  id="school"
+                  name="school"
+                  placeholder="Lincoln Elementary"
+                  required
+                  value={formData.school}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
@@ -153,7 +167,7 @@ const TeacherSignup: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Grade Levels (select all that apply)</Label>
+                <Label>Grade Levels You Teach</Label>
                 <div className="grid grid-cols-4 gap-2 mt-2">
                   {grades.map(grade => (
                     <div key={grade} className="flex items-center space-x-2">
