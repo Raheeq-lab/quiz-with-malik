@@ -8,8 +8,8 @@ const NavBar: React.FC = () => {
     <nav className="w-full bg-white shadow-sm py-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2">
-          <div className="bg-quiz-purple text-white font-bold rounded-lg p-2">Q</div>
-          <span className="font-bold text-xl text-quiz-dark">QuizHub</span>
+          <div className="bg-quiz-purple text-white font-bold rounded-lg p-2">O</div>
+          <span className="font-bold text-xl text-quiz-dark">Olympiad by Malik</span>
         </Link>
         <div className="flex gap-4 items-center">
           <Link to="/student-join">

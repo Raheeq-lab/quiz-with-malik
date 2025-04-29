@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import NavBar from '@/components/NavBar';
 
 const TeacherSignup: React.FC = () => {
@@ -17,7 +18,10 @@ const TeacherSignup: React.FC = () => {
     password: '',
     confirmPassword: '',
   });
+  const [selectedGrades, setSelectedGrades] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const grades = [3, 4, 5, 6, 7, 8, 9, 10];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,6 +29,16 @@ const TeacherSignup: React.FC = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleGradeChange = (grade: number) => {
+    setSelectedGrades(prev => {
+      if (prev.includes(grade)) {
+        return prev.filter(g => g !== grade);
+      } else {
+        return [...prev, grade].sort((a, b) => a - b);
+      }
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,20 +55,31 @@ const TeacherSignup: React.FC = () => {
       setIsLoading(false);
       return;
     }
+
+    if (selectedGrades.length === 0) {
+      toast({
+        title: "No grades selected",
+        description: "Please select at least one grade level.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
     
     // Simulate signup process
     setTimeout(() => {
       // In a real app, this would be an API call
       toast({
         title: "Account created!",
-        description: "Welcome to QuizHub. You can now create and manage quizzes.",
+        description: "Welcome to Olympiad by Malik. You can now create and manage quizzes.",
       });
       
       // Store mock user data (in a real app, this would be handled by authentication system)
-      localStorage.setItem('quizHubTeacher', JSON.stringify({
+      localStorage.setItem('olympiadTeacher', JSON.stringify({
         id: 'teacher-' + Date.now(),
         name: formData.name,
         email: formData.email,
+        grades: selectedGrades,
         isAuthenticated: true
       }));
       
@@ -125,6 +150,24 @@ const TeacherSignup: React.FC = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Grade Levels (select all that apply)</Label>
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {grades.map(grade => (
+                    <div key={grade} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`grade-${grade}`} 
+                        checked={selectedGrades.includes(grade)}
+                        onCheckedChange={() => handleGradeChange(grade)}
+                      />
+                      <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
+                        Grade {grade}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               
               <Button
