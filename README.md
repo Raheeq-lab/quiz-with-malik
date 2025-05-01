@@ -1,73 +1,79 @@
-# Welcome to your Lovable project
 
-## Project info
+# Math with Malik
 
-**URL**: https://lovable.dev/projects/4b2436f5-1d3e-44e7-a9d4-af5646820fca
+## Overview
+Math with Malik is an interactive web application designed for schoolchildren in grades 3-10 to take math quizzes and participate in Olympiad contests. The platform features a teacher-focused management system that allows educators to create custom quizzes and monitor student performance.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+### For Teachers
+- **Account Creation**: Teachers can sign up and log in to access the dashboard
+- **Quiz Management**: Create custom multiple-choice quizzes with one correct answer out of four options
+- **Grade Level Assignment**: Assign quizzes to specific grade levels (3-10)
+- **Access Control**: Generate unique quiz codes for student access
+- **Performance Tracking**: View student results and analyze performance data
+- **AI Question Generator**: Generate math questions automatically based on grade level and topic
 
-**Use Lovable**
+### For Students
+- **No Sign-up Required**: Students can access quizzes by simply entering the provided code
+- **Interactive Quiz Experience**: 
+  - One question displayed at a time
+  - Live countdown timer
+  - Automatic grading upon submission
+  - Final score display
+- **Leaderboard**: View top student scores sorted by score and completion time
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4b2436f5-1d3e-44e7-a9d4-af5646820fca) and start prompting.
+## Technology Stack
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **UI Components**: shadcn/ui
+- **State Management**: Local storage (currently)
+- **Responsive Design**: Mobile and desktop friendly interface
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
+- Node.js and npm installed
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/math-with-malik.git
+cd math-with-malik
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Install dependencies
+```bash
+npm install
+```
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open your browser and navigate to `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Usage
 
-**Use GitHub Codespaces**
+### Teacher Flow
+1. Sign up as a teacher
+2. Create a quiz by selecting grade level and adding questions
+3. Share the generated access code with students
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Student Flow
+1. Enter the quiz code provided by the teacher
+2. Complete the quiz by answering all questions within the time limit
+3. View your score and position on the leaderboard
 
-## What technologies are used for this project?
+## Future Enhancements
+- Firebase integration for authentication and data storage
+- Enhanced analytics for teacher dashboard
+- Additional question types beyond multiple choice
+- Custom timer settings per question
+- Ability to save and resume quizzes
 
-This project is built with:
+## Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4b2436f5-1d3e-44e7-a9d4-af5646820fca) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
