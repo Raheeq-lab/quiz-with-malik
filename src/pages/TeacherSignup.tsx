@@ -94,113 +94,125 @@ const TeacherSignup: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <NavBar />
       
-      <main className="flex-1 flex items-center justify-center p-4 bg-quiz-light">
-        <Card className="w-full max-w-md shadow-lg card-hover">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl gradient-text">Math Teacher Sign Up</CardTitle>
-            <CardDescription>
-              Create an account to build math quizzes for your students
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="John Doe"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="john.doe@school.edu"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="school">School Name</Label>
-                <Input
-                  id="school"
-                  name="school"
-                  placeholder="Lincoln Elementary"
-                  required
-                  value={formData.school}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Grade Levels You Teach</Label>
-                <div className="grid grid-cols-4 gap-2 mt-2">
-                  {grades.map(grade => (
-                    <div key={grade} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`grade-${grade}`} 
-                        checked={selectedGrades.includes(grade)}
-                        onCheckedChange={() => handleGradeChange(grade)}
-                      />
-                      <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
-                        Grade {grade}
-                      </Label>
-                    </div>
-                  ))}
+      <main className="flex-1 flex flex-col lg:flex-row bg-quiz-light">
+        <div className="lg:w-1/2 p-4 flex items-center justify-center">
+          <Card className="w-full max-w-md shadow-lg card-hover">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl gradient-text">Math Teacher Sign Up</CardTitle>
+              <CardDescription>
+                Create an account to build math quizzes for your students
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="John Doe"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
                 </div>
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full bg-quiz-purple hover:bg-opacity-90"
-                disabled={isLoading}
-              >
-                {isLoading ? "Creating Account..." : "Sign Up"}
-              </Button>
-              
-              <p className="text-center text-sm text-gray-500 mt-4">
-                Already have an account?{" "}
-                <a href="#" className="text-quiz-teal hover:underline">
-                  Sign In
-                </a>
-              </p>
-            </form>
-          </CardContent>
-        </Card>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="john.doe@school.edu"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="school">School Name</Label>
+                  <Input
+                    id="school"
+                    name="school"
+                    placeholder="Lincoln Elementary"
+                    required
+                    value={formData.school}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Grade Levels You Teach</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {grades.map(grade => (
+                      <div key={grade} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`grade-${grade}`} 
+                          checked={selectedGrades.includes(grade)}
+                          onCheckedChange={() => handleGradeChange(grade)}
+                        />
+                        <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
+                          Grade {grade}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <Button
+                  type="submit"
+                  className="w-full bg-quiz-purple hover:bg-opacity-90"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating Account..." : "Sign Up"}
+                </Button>
+                
+                <p className="text-center text-sm text-gray-500 mt-4">
+                  Already have an account?{" "}
+                  <a href="#" className="text-quiz-teal hover:underline">
+                    Sign In
+                  </a>
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="lg:w-1/2 p-4 hidden lg:flex items-center justify-center">
+          <div className="rounded-lg overflow-hidden shadow-xl">
+            <img 
+              src="/lovable-uploads/809a7775-32d7-4138-94d3-e6fb31052ee0.png" 
+              alt="Students in a math session" 
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
       </main>
     </div>
   );

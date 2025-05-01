@@ -66,64 +66,76 @@ const StudentJoin: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <NavBar />
       
-      <main className="flex-1 flex items-center justify-center p-4 bg-quiz-light">
-        <Card className="w-full max-w-md shadow-lg animate-fade-in">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl gradient-text">Join Math Quiz</CardTitle>
-            <CardDescription>
-              Enter the quiz code provided by your teacher
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <form onSubmit={handleJoin} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="studentName" className="block text-sm font-medium">
-                  Your Name
-                </label>
-                <Input
-                  id="studentName"
-                  placeholder="Enter your name"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="accessCode" className="block text-sm font-medium">
-                  Quiz Code
-                </label>
-                <Input
-                  id="accessCode"
-                  placeholder="Enter the 6-digit code"
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                  className="access-code text-center text-lg"
-                  maxLength={6}
-                  required
-                />
-              </div>
-              
-              <Button
-                type="submit"
-                className="w-full bg-quiz-teal hover:bg-opacity-90"
-                disabled={isJoining}
-              >
-                {isJoining ? "Joining..." : "Start Quiz"}
-              </Button>
-            </form>
+      <main className="flex-1 flex flex-col md:flex-row bg-quiz-light">
+        <div className="md:w-1/2 p-4 flex items-center justify-center">
+          <Card className="w-full max-w-md shadow-lg animate-fade-in">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl gradient-text">Join Math Quiz</CardTitle>
+              <CardDescription>
+                Enter the quiz code provided by your teacher
+              </CardDescription>
+            </CardHeader>
             
-            <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-sm text-gray-700 mb-2">How to join:</h3>
-              <ol className="text-sm text-gray-600 space-y-2 list-decimal pl-5">
-                <li>Enter your name so your teacher can identify you</li>
-                <li>Enter the 6-digit quiz code provided by your teacher</li>
-                <li>Click "Start Quiz" to begin</li>
-              </ol>
-            </div>
-          </CardContent>
-        </Card>
+            <CardContent>
+              <form onSubmit={handleJoin} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="studentName" className="block text-sm font-medium">
+                    Your Name
+                  </label>
+                  <Input
+                    id="studentName"
+                    placeholder="Enter your name"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="accessCode" className="block text-sm font-medium">
+                    Quiz Code
+                  </label>
+                  <Input
+                    id="accessCode"
+                    placeholder="Enter the 6-digit code"
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                    className="access-code text-center text-lg"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+                
+                <Button
+                  type="submit"
+                  className="w-full bg-quiz-teal hover:bg-opacity-90"
+                  disabled={isJoining}
+                >
+                  {isJoining ? "Joining..." : "Start Quiz"}
+                </Button>
+              </form>
+              
+              <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
+                <h3 className="font-semibold text-sm text-gray-700 mb-2">How to join:</h3>
+                <ol className="text-sm text-gray-600 space-y-2 list-decimal pl-5">
+                  <li>Enter your name so your teacher can identify you</li>
+                  <li>Enter the 6-digit quiz code provided by your teacher</li>
+                  <li>Click "Start Quiz" to begin</li>
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="md:w-1/2 p-4 hidden md:flex items-center justify-center">
+          <div className="rounded-lg overflow-hidden shadow-xl">
+            <img 
+              src="/lovable-uploads/1546979f-b3c0-4aa7-bfd1-50f90294a353.png" 
+              alt="Students ready for the math quiz" 
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
       </main>
     </div>
   );

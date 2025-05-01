@@ -34,6 +34,19 @@ const Index: React.FC = () => {
           </div>
         </section>
         
+        {/* Image Section */}
+        <section className="py-10 px-4 bg-white">
+          <div className="container mx-auto">
+            <div className="rounded-lg overflow-hidden shadow-xl max-w-5xl mx-auto">
+              <img 
+                src="/lovable-uploads/c498bc13-c877-4138-8b03-fd022c61fcfc.png" 
+                alt="Students participating in math olympiad" 
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+        </section>
+        
         {/* Features Section */}
         <section className="py-16 px-4 bg-white">
           <div className="container mx-auto">
