@@ -17,6 +17,7 @@ export interface QuizQuestion {
   options: string[];
   correctOptionIndex: number;
   explanation?: string;
+  imageUrl?: string; // Added for question images
 }
 
 export interface StudentQuizResult {

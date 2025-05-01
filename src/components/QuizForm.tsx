@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Image, Upload } from "lucide-react";
 import { Quiz, QuizQuestion } from '@/types/quiz';
 
 interface QuizFormProps {
@@ -39,6 +39,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
   const [selectedGrade, setSelectedGrade] = useState<string>('');
   const [timeLimit, setTimeLimit] = useState<number>(30);
   const [questions, setQuestions] = useState<QuizQuestion[]>([initialQuestion]);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   
   const handleAddQuestion = () => {
     setQuestions(prev => [...prev, {
@@ -83,6 +84,47 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
     setQuestions(prev => prev.map((q, qIndex) => 
       qIndex === questionIndex ? { ...q, correctOptionIndex: optionIndex } : q
     ));
+  };
+  
+  const handleImageUpload = (questionIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image size should be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Only image files are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Convert image to base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      handleQuestionChange(questionIndex, 'imageUrl', base64);
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const removeImage = (questionIndex: number) => {
+    handleQuestionChange(questionIndex, 'imageUrl', undefined);
+    // Reset file input
+    if (fileInputRefs.current[questionIndex]) {
+      fileInputRefs.current[questionIndex]!.value = '';
+    }
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -246,6 +288,56 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
                     placeholder="e.g., What is 1/4 + 1/2?"
                     rows={2}
                   />
+                </div>
+                
+                {/* Question Image Upload */}
+                <div>
+                  <Label htmlFor={`q${qIndex}-image`} className="block mb-2">Question Image (Optional)</Label>
+                  {question.imageUrl ? (
+                    <div className="relative mb-2">
+                      <img 
+                        src={question.imageUrl} 
+                        alt={`Image for question ${qIndex + 1}`}
+                        className="max-h-40 rounded-md border border-gray-200"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-8 w-8 p-1 rounded-full"
+                        onClick={() => removeImage(qIndex)}
+                      >
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id={`q${qIndex}-image`}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(qIndex, e)}
+                        ref={(el) => {
+                          if (fileInputRefs.current.length <= qIndex) {
+                            fileInputRefs.current = [...fileInputRefs.current, el];
+                          } else {
+                            fileInputRefs.current[qIndex] = el;
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => fileInputRefs.current[qIndex]?.click()}
+                      >
+                        <Upload size={16} />
+                        Upload Image
+                      </Button>
+                      <span className="text-sm text-gray-500">Max size: 5MB</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-3">

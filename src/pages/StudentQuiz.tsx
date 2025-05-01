@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -241,6 +240,15 @@ const StudentQuiz: React.FC = () => {
             <CardTitle className="text-xl">
               {currentQuestion?.text}
             </CardTitle>
+            {currentQuestion?.imageUrl && (
+              <div className="mt-4">
+                <img 
+                  src={currentQuestion.imageUrl} 
+                  alt="Question illustration" 
+                  className="mx-auto max-h-60 rounded-md border border-gray-200"
+                />
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
