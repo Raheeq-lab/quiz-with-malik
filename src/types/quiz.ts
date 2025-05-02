@@ -57,6 +57,7 @@ export interface Lesson {
   createdBy: string;
   createdAt: string;
   accessCode: string;
+  learningType: string; // Added learningType property
 }
 
 export interface LessonContent {
