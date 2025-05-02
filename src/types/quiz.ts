@@ -62,9 +62,10 @@ export interface Lesson {
 
 export interface LessonContent {
   id: string;
-  type: "text" | "image" | "imageWithPrompt" | "dragAndDrop" | "labeling";
+  type: "text" | "image" | "imageWithPrompt" | "dragAndDrop" | "labeling" | "video"; // Added video type
   content: string;
   imageUrl?: string;
+  videoUrl?: string; // Added for video content
   prompt?: string;
   options?: string[];
   solution?: string | string[];

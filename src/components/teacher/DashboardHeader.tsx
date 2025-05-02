@@ -19,7 +19,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ teacherName, onLogout
         
         <div className="flex items-center gap-4">
           <span>Welcome, {teacherName}</span>
-          <Button variant="outline" className="border-white text-white hover:bg-white/10" onClick={onLogout}>
+          <Button 
+            variant="destructive" 
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold" 
+            onClick={onLogout}
+          >
             Logout
           </Button>
         </div>

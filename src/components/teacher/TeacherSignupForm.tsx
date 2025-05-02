@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import GradeSelector from "@/components/teacher/GradeSelector";
-import SubjectSelector from "@/components/SubjectSelector";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -27,8 +25,6 @@ const formSchema = z.object({
 const TeacherSignupForm: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [selectedGrades, setSelectedGrades] = useState<number[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<string>("math");
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,34 +37,15 @@ const TeacherSignupForm: React.FC = () => {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (selectedGrades.length === 0) {
-      toast({
-        title: "Grade selection required",
-        description: "Please select at least one grade level you teach.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedSubject) {
-      toast({
-        title: "Subject selection required",
-        description: "Please select at least one subject you teach.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const subjects = [selectedSubject] as ("math" | "english" | "ict")[];
-    
-    // Create teacher account
+    // Create teacher account with default grades and subjects
+    // These will be selected on the dashboard after login
     const teacher = {
       id: `teacher-${Date.now()}`,
       name: values.name,
       email: values.email,
       school: values.school,
-      grades: selectedGrades,
-      subjects: subjects,
+      grades: [1, 2, 3], // Default grades
+      subjects: ["math", "english", "ict"] as ("math" | "english" | "ict")[], // Default subjects
       // In a real app, we would hash the password
       // This is just for demo purposes
       passwordHash: values.password
@@ -146,20 +123,6 @@ const TeacherSignupForm: React.FC = () => {
             </FormItem>
           )}
         />
-
-        <GradeSelector 
-          selectedGrades={selectedGrades}
-          onChange={setSelectedGrades}
-          subject={selectedSubject as "math" | "english" | "ict"}
-        />
-        
-        <div className="space-y-2">
-          <FormLabel>Subjects You Teach</FormLabel>
-          <SubjectSelector
-            selectedSubject={selectedSubject}
-            onChange={setSelectedSubject}
-          />
-        </div>
 
         <FormField
           control={form.control}

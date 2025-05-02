@@ -3,11 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp } from "lucide-react";
+import { X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp, Video } from "lucide-react";
 import { Lesson, LessonContent } from '@/types/quiz';
 import SubjectSelector from '@/components/SubjectSelector';
 
@@ -22,7 +21,7 @@ interface LessonBuilderProps {
   grades: number[];
   onSave: (lesson: Lesson) => void;
   onCancel: () => void;
-  subject?: "math" | "english" | "ict";
+  subject: "math" | "english" | "ict";
 }
 
 const generateAccessCode = () => {
@@ -44,15 +43,14 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedGrade, setSelectedGrade] = useState<string>('');
-  const [selectedSubject, setSelectedSubject] = useState<"math" | "english" | "ict">(subject);
   const [contentBlocks, setContentBlocks] = useState<LessonContent[]>([initialContent]);
   const [selectedLearningType, setSelectedLearningType] = useState<string>('');
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const videoInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Define learning types based on selected subject
   const getLearningTypes = (): LearningTypeOption[] => {
-    switch (selectedSubject) {
+    switch (subject) {
       case "math":
         return [
           {
@@ -181,6 +179,11 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
           { id: `content-${Date.now()}-1`, type: 'text', content: 'Instructions:' },
           { id: `content-${Date.now()}-2`, type: 'labeling', content: 'Label the components:' }
         ];
+      case "watch-demonstrate":
+        return [
+          { id: `content-${Date.now()}-1`, type: 'text', content: 'Watch the following video:' },
+          { id: `content-${Date.now()}-2`, type: 'video', content: 'Video demonstration' }
+        ];
       default:
         return [initialContent];
     }
@@ -247,12 +250,53 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     };
     reader.readAsDataURL(file);
   };
+
+  const handleVideoUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file size (limit to 50MB for video)
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Video size should be less than 50MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check file type
+    if (!file.type.startsWith('video/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Only video files are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Convert video to base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      handleContentChange(index, 'videoUrl', base64);
+    };
+    reader.readAsDataURL(file);
+  };
   
   const removeImage = (index: number) => {
     handleContentChange(index, 'imageUrl', undefined);
     // Reset file input
     if (fileInputRefs.current[index]) {
       fileInputRefs.current[index]!.value = '';
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    handleContentChange(index, 'videoUrl', undefined);
+    // Reset file input
+    if (videoInputRefs.current[index]) {
+      videoInputRefs.current[index]!.value = '';
     }
   };
 
@@ -300,15 +344,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       });
       return;
     }
-    
-    if (!selectedGrade) {
-      toast({
-        title: "Grade level required",
-        description: "Please select a grade level for your lesson.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     if (!selectedLearningType) {
       toast({
@@ -341,6 +376,15 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
         return;
       }
 
+      if (block.type === 'video' && !block.videoUrl) {
+        toast({
+          title: "Missing video",
+          description: `Video block ${i + 1} needs a video file.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (block.type === 'imageWithPrompt' && !block.prompt?.trim()) {
         toast({
           title: "Missing prompt",
@@ -356,9 +400,9 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       id: `lesson-${Date.now()}`,
       title,
       description,
-      gradeLevel: parseInt(selectedGrade),
-      subject: selectedSubject,
-      learningType: selectedLearningType, // Add learning type to the lesson
+      gradeLevel: grades[0] || 1, // Use the first grade from the dashboard
+      subject,
+      learningType: selectedLearningType,
       content: contentBlocks,
       accessCode: generateAccessCode(),
       createdBy: JSON.parse(localStorage.getItem('mathWithMalikTeacher') || '{}').id || 'unknown',
@@ -369,7 +413,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   };
 
   const getSubjectIcon = () => {
-    switch (selectedSubject) {
+    switch (subject) {
       case "math": return <BookOpen className="text-purple-500" />;
       case "english": return <BookText className="text-green-500" />;
       case "ict": return <Laptop className="text-orange-500" />;
@@ -379,7 +423,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
 
   // Get color based on subject
   const getSubjectColorClass = () => {
-    switch (selectedSubject) {
+    switch (subject) {
       case "math": return "border-purple-300 bg-purple-50 text-purple-900";
       case "english": return "border-green-300 bg-green-50 text-green-900";
       case "ict": return "border-orange-300 bg-orange-50 text-orange-900";
@@ -456,6 +500,65 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                 value={block.content || ''}
                 onChange={(e) => handleContentChange(index, 'content', e.target.value)}
                 placeholder="Image caption or description"
+              />
+            </div>
+          </div>
+        );
+
+      case 'video':
+        return (
+          <div className="space-y-4">
+            <Label>Video</Label>
+            {block.videoUrl ? (
+              <div className="relative mb-2">
+                <video 
+                  src={block.videoUrl}
+                  controls
+                  className="w-full max-h-80 rounded-md border border-gray-200"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  className="absolute top-1 right-1 h-8 w-8 p-1 rounded-full"
+                  onClick={() => removeVideo(index)}
+                >
+                  <X size={16} />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="video/mp4,video/quicktime,video/webm"
+                  onChange={(e) => handleVideoUpload(index, e)}
+                  ref={(el) => {
+                    if (videoInputRefs.current.length <= index) {
+                      videoInputRefs.current = [...videoInputRefs.current, el];
+                    } else {
+                      videoInputRefs.current[index] = el;
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={() => videoInputRefs.current[index]?.click()}
+                >
+                  <Upload size={16} />
+                  Upload Video (MP4)
+                </Button>
+                <span className="text-sm text-gray-500">Max size: 50MB</span>
+              </div>
+            )}
+            <div>
+              <Label>Title (Optional)</Label>
+              <Input
+                value={block.content || ''}
+                onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+                placeholder="Video title or description"
               />
             </div>
           </div>
@@ -564,6 +667,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       // For now, we'll handle drag-and-drop and labeling similarly to imageWithPrompt
       case 'dragAndDrop':
       case 'labeling':
+        // ... keep existing code
         return (
           <div className="space-y-4">
             <Label>{block.type === 'dragAndDrop' ? 'Drag and Drop Exercise' : 'Labeling Exercise'}</Label>
@@ -677,7 +781,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {getSubjectIcon()}
-          <span>Create New Lesson</span>
+          <span>Create New {subject.charAt(0).toUpperCase() + subject.slice(1)} Lesson</span>
         </CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -704,32 +808,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                 rows={2}
               />
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="grade">Grade Level</Label>
-                <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select grade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {grades.map(grade => (
-                      <SelectItem key={grade} value={grade.toString()}>Grade {grade}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <SubjectSelector 
-                  selectedSubject={selectedSubject}
-                  onChange={(subject) => {
-                    setSelectedSubject(subject as "math" | "english" | "ict");
-                    setSelectedLearningType(''); // Reset learning type when subject changes
-                  }}
-                />
-              </div>
-            </div>
 
             {/* Learning Types Selection */}
             <div>
@@ -740,9 +818,9 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                     key={type.id}
                     className={`border rounded-lg p-3 cursor-pointer transition-all ${
                       selectedLearningType === type.id
-                        ? selectedSubject === "math"
+                        ? subject === "math"
                           ? "bg-purple-100 border-purple-400"
-                          : selectedSubject === "english"
+                          : subject === "english"
                           ? "bg-green-100 border-green-400"
                           : "bg-orange-100 border-orange-400"
                         : "hover:border-gray-400"
@@ -768,7 +846,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                 <Tabs defaultValue="text">
                   <TabsList>
                     <TabsTrigger value="text">Text</TabsTrigger>
-                    <TabsTrigger value="image">Image</TabsTrigger>
+                    <TabsTrigger value="media">Media</TabsTrigger>
                     <TabsTrigger value="interactive">Interactive</TabsTrigger>
                   </TabsList>
                   <TabsContent value="text" className="space-y-0 py-0 px-0 mt-0">
@@ -783,20 +861,32 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                       Add Text Block
                     </Button>
                   </TabsContent>
-                  <TabsContent value="image" className="space-y-0 py-0 px-0 mt-0">
-                    <Button
-                      type="button"
-                      onClick={() => handleAddContent('image')}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                    >
-                      <Image size={16} />
-                      Add Image
-                    </Button>
+                  <TabsContent value="media" className="space-y-0 py-0 px-0 mt-0">
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => handleAddContent('image')}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Image size={16} />
+                        Add Image
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleAddContent('video')}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Video size={16} />
+                        Add Video
+                      </Button>
+                    </div>
                   </TabsContent>
                   <TabsContent value="interactive" className="space-y-0 py-0 px-0 mt-0">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
                         onClick={() => handleAddContent('imageWithPrompt')}
@@ -835,6 +925,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                       <h4 className="text-md font-medium flex items-center gap-2">
                         {block.type === 'text' && <FileText size={18} />}
                         {block.type === 'image' && <Image size={18} />}
+                        {block.type === 'video' && <Video size={18} />}
                         {block.type === 'imageWithPrompt' && <FileText size={18} />}
                         {block.type === 'dragAndDrop' && <FileText size={18} />}
                         {block.type === 'labeling' && <FileText size={18} />}

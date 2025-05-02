@@ -15,6 +15,7 @@ import QuestionGeneratorTab from '@/components/teacher/tabs/QuestionGeneratorTab
 import LessonsTab from '@/components/teacher/tabs/LessonsTab';
 import LearningTypesTab from '@/components/teacher/tabs/LearningTypesTab';
 import SubjectSelector from '@/components/SubjectSelector';
+import GradeSelector from '@/components/teacher/GradeSelector';
 import { 
   getLeaderboardEntries, 
   findQuizById, 
@@ -33,6 +34,7 @@ const TeacherDashboard: React.FC = () => {
   const [showLessonBuilder, setShowLessonBuilder] = useState(false);
   const [results, setResults] = useState<StudentQuizResult[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<"math" | "english" | "ict">("math");
+  const [selectedGrades, setSelectedGrades] = useState<number[]>([]);
   
   useEffect(() => {
     // Check if user is logged in
@@ -45,6 +47,7 @@ const TeacherDashboard: React.FC = () => {
     
     const teacher = JSON.parse(storedTeacher);
     setTeacherData(teacher);
+    setSelectedGrades(teacher.grades || []);
     
     // Load quizzes
     const storedQuizzes = localStorage.getItem('mathWithMalikQuizzes');
@@ -137,11 +140,20 @@ const TeacherDashboard: React.FC = () => {
       <main className="flex-1 container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-8">Malik's Learning Lab</h1>
 
-        <div className="mb-6">
-          <SubjectSelector 
-            selectedSubject={selectedSubject}
-            onChange={(subject) => setSelectedSubject(subject as "math" | "english" | "ict")}
-          />
+        <div className="flex flex-col sm:flex-row gap-6 mb-6">
+          <div className="w-full sm:w-1/2">
+            <SubjectSelector 
+              selectedSubject={selectedSubject}
+              onChange={(subject) => setSelectedSubject(subject as "math" | "english" | "ict")}
+            />
+          </div>
+          <div className="w-full sm:w-1/2">
+            <GradeSelector 
+              selectedGrades={selectedGrades}
+              onChange={setSelectedGrades}
+              subject={selectedSubject}
+            />
+          </div>
         </div>
         
         {!showQuizForm && !showLessonBuilder ? (
@@ -204,21 +216,21 @@ const TeacherDashboard: React.FC = () => {
             
             <TabsContent value="generate">
               <QuestionGeneratorTab 
-                grades={teacherData?.grades || []}
+                grades={selectedGrades} 
                 subject={selectedSubject}
               />
             </TabsContent>
           </Tabs>
         ) : showQuizForm ? (
           <QuizForm 
-            grades={teacherData?.grades || []} 
+            grades={selectedGrades} 
             onSave={handleCreateQuiz}
             onCancel={handleCancelQuizForm}
             subject={selectedSubject}
           />
         ) : (
           <LessonBuilder 
-            grades={teacherData?.grades || []} 
+            grades={selectedGrades} 
             onSave={handleCreateLesson}
             onCancel={handleCancelLessonBuilder}
             subject={selectedSubject}
