@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import LeaderboardComponent from '@/components/LeaderboardComponent';
-import { Book, Users, Clock } from "lucide-react";
 import { Quiz, LeaderboardEntry } from '@/types/quiz';
+import { BarChart, BookOpen, BookText, Laptop } from 'lucide-react';
 
 interface PerformanceTabProps {
   quizzes: Quiz[];
@@ -13,92 +13,148 @@ interface PerformanceTabProps {
   getTotalCompletions: () => number;
   getLeaderboardEntries: (quizId: string) => LeaderboardEntry[];
   findQuizById: (id: string) => Quiz | undefined;
+  subject?: "math" | "english" | "ict";
 }
 
-const PerformanceTab: React.FC<PerformanceTabProps> = ({ 
-  quizzes, 
-  getTotalStudents, 
+const PerformanceTab: React.FC<PerformanceTabProps> = ({
+  quizzes,
+  getTotalStudents,
   getTotalCompletions,
   getLeaderboardEntries,
-  findQuizById
+  findQuizById,
+  subject = "math"
 }) => {
   const [selectedQuizId, setSelectedQuizId] = useState<string>("");
   
+  // Filter quizzes by selected subject
+  const filteredQuizzes = quizzes.filter(quiz => quiz.subject === subject);
+  const leaderboard = selectedQuizId ? getLeaderboardEntries(selectedQuizId) : [];
+  const selectedQuiz = selectedQuizId ? findQuizById(selectedQuizId) : undefined;
+
+  // Get color based on subject
+  const getSubjectColor = () => {
+    switch (subject) {
+      case "math": return "border-l-purple-500 from-purple-50 to-white";
+      case "english": return "border-l-green-500 from-green-50 to-white";
+      case "ict": return "border-l-orange-500 from-orange-50 to-white";
+      default: return "border-l-purple-500 from-purple-50 to-white";
+    }
+  };
+
+  const getSubjectHeaderColor = () => {
+    switch (subject) {
+      case "math": return "text-purple-700";
+      case "english": return "text-green-700";
+      case "ict": return "text-orange-700";
+      default: return "text-purple-700";
+    }
+  };
+
+  const getSubjectIcon = () => {
+    switch (subject) {
+      case "math": return <BookOpen size={20} className="text-purple-500" />;
+      case "english": return <BookText size={20} className="text-green-500" />;
+      case "ict": return <Laptop size={20} className="text-orange-500" />;
+      default: return <BookOpen size={20} className="text-purple-500" />;
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="bg-blue-50">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <Book className="text-blue-500" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Quizzes</p>
-              <p className="text-2xl font-bold">{quizzes.length}</p>
-            </div>
-          </CardContent>
+      <div className="flex items-center gap-2">
+        <BarChart size={20} className={getSubjectHeaderColor()} />
+        <h2 className="text-xl font-semibold">{subject.charAt(0).toUpperCase() + subject.slice(1)} Performance Analytics</h2>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className={`border-l-4 ${getSubjectColor()} bg-gradient-to-r`}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-2xl">{getTotalStudents()}</CardTitle>
+            <CardDescription>Total Students</CardDescription>
+          </CardHeader>
         </Card>
         
-        <Card className="bg-green-50">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="bg-green-100 p-3 rounded-full">
-              <Users className="text-green-500" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Students</p>
-              <p className="text-2xl font-bold">{getTotalStudents()}</p>
-            </div>
-          </CardContent>
+        <Card className={`border-l-4 ${getSubjectColor()} bg-gradient-to-r`}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-2xl">{getTotalCompletions()}</CardTitle>
+            <CardDescription>Total Quiz Completions</CardDescription>
+          </CardHeader>
         </Card>
         
-        <Card className="bg-purple-50">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="bg-purple-100 p-3 rounded-full">
-              <Clock className="text-purple-500" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Quiz Completions</p>
-              <p className="text-2xl font-bold">{getTotalCompletions()}</p>
-            </div>
-          </CardContent>
+        <Card className={`border-l-4 ${getSubjectColor()} bg-gradient-to-r`}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-2xl">{filteredQuizzes.length}</CardTitle>
+            <CardDescription>Total {subject.charAt(0).toUpperCase() + subject.slice(1)} Quizzes</CardDescription>
+          </CardHeader>
         </Card>
       </div>
       
-      <h3 className="text-lg font-semibold mb-4">Quiz Leaderboards</h3>
-      
-      <div className="space-y-4">
-        {quizzes.length > 0 ? (
-          <div>
-            <Label htmlFor="quizSelect">Select Quiz</Label>
-            <div className="flex gap-4">
-              <Select value={selectedQuizId} onValueChange={setSelectedQuizId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a quiz" />
-                </SelectTrigger>
-                <SelectContent>
-                  {quizzes.map(quiz => (
-                    <SelectItem key={quiz.id} value={quiz.id}>{quiz.title} (Grade {quiz.gradeLevel})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {selectedQuizId && (
-              <div className="mt-4">
-                <LeaderboardComponent 
-                  entries={getLeaderboardEntries(selectedQuizId)} 
-                  quizTitle={findQuizById(selectedQuizId)?.title}
-                />
+      <Tabs defaultValue="leaderboard" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+          <TabsTrigger value="analytics">Detailed Analytics</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="leaderboard">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quiz Leaderboard</CardTitle>
+              <CardDescription>View top performers for each quiz</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Select Quiz</label>
+                  <Select value={selectedQuizId} onValueChange={setSelectedQuizId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a quiz" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredQuizzes.map(quiz => (
+                        <SelectItem key={quiz.id} value={quiz.id}>{quiz.title} (Grade {quiz.gradeLevel})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedQuizId && leaderboard.length > 0 ? (
+                  <LeaderboardComponent 
+                    entries={leaderboard} 
+                    quizTitle={selectedQuiz?.title || "Quiz"} 
+                  />
+                ) : selectedQuizId ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No results for this quiz yet.</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="flex items-center justify-center mb-2">
+                      {getSubjectIcon()}
+                    </div>
+                    <p className="text-gray-500">Select a quiz to view its leaderboard.</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-8 bg-quiz-light rounded-lg">
-            <p className="text-gray-500">No quiz data available yet.</p>
-            <p className="text-gray-500">Create a quiz and have students take it to see results.</p>
-          </div>
-        )}
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="analytics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Detailed Analytics</CardTitle>
+              <CardDescription>Insights into student performance</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[400px] flex items-center justify-center">
+              <div className="text-center">
+                <BarChart size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-500">Detailed analytics coming soon!</p>
+                <p className="text-sm text-gray-400">This feature is under development.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

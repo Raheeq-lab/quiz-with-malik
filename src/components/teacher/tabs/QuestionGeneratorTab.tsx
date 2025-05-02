@@ -1,143 +1,122 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { Copy, Loader2 } from "lucide-react";
+import { BookOpen, BookText, Laptop } from 'lucide-react';
 
 interface QuestionGeneratorTabProps {
   grades: number[];
+  subject?: "math" | "english" | "ict";
 }
 
-const QuestionGeneratorTab: React.FC<QuestionGeneratorTabProps> = ({ grades }) => {
+const QuestionGeneratorTab: React.FC<QuestionGeneratorTabProps> = ({ grades, subject = "math" }) => {
   const { toast } = useToast();
-  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState<string>("");
-  const [topic, setTopic] = useState("");
-  const [generatedQuestions, setGeneratedQuestions] = useState("");
-  
-  const handleGenerateQuestions = async () => {
-    if (!topic.trim() || !selectedGrade) {
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateClick = () => {
+    if (!selectedGrade || selectedTopics.length === 0) {
       toast({
-        title: "Information required",
-        description: "Please enter both a topic and select a grade level.",
+        title: "Missing information",
+        description: "Please select grade level and at least one topic.",
         variant: "destructive",
       });
       return;
     }
-
-    setIsGeneratingQuestions(true);
-
-    // Simulate AI question generation (in a real app, this would be an API call to an AI service)
+    
+    setIsGenerating(true);
+    
+    // Simulate AI generation
     setTimeout(() => {
-      // Mock AI-generated questions based on topic and grade
-      const grade = parseInt(selectedGrade);
-      const difficultyLevel = grade <= 6 ? "basic" : "intermediate";
+      // Sample questions based on subject
+      let questions = "";
       
-      const generateMockQuestions = () => {
-        // Generate math questions based on the grade level
-        const questions = [];
-        
-        if (grade <= 4) {
-          // Basic arithmetic for lower grades
-          questions.push({
-            text: `What is 25 + 37?`,
-            options: ["52", "62", "72", "42"],
-            correctOptionIndex: 1
-          });
-          questions.push({
-            text: `If you have 5 apples and eat 2, how many do you have left?`,
-            options: ["2", "3", "5", "7"],
-            correctOptionIndex: 1
-          });
-          questions.push({
-            text: `What is 9 × 4?`,
-            options: ["13", "36", "45", "27"],
-            correctOptionIndex: 1
-          });
-          questions.push({
-            text: `What is half of 18?`,
-            options: ["9", "8", "6", "10"],
-            correctOptionIndex: 0
-          });
-          questions.push({
-            text: `Which number is greater: 43 or 34?`,
-            options: ["43", "34", "They are equal", "Cannot determine"],
-            correctOptionIndex: 0
-          });
-        } else if (grade <= 7) {
-          // Intermediate math for middle grades
-          questions.push({
-            text: `What is the value of x in the equation: 3x + 5 = 20?`,
-            options: ["5", "15", "7.5", "5.5"],
-            correctOptionIndex: 0
-          });
-          questions.push({
-            text: `What is the area of a rectangle with length 8 cm and width 6 cm?`,
-            options: ["14 cm²", "28 cm²", "48 cm²", "54 cm²"],
-            correctOptionIndex: 2
-          });
-          questions.push({
-            text: `What is 1/4 + 3/8?`,
-            options: ["4/12", "5/8", "6/12", "7/8"],
-            correctOptionIndex: 1
-          });
-          questions.push({
-            text: `If 30% of a number is 15, what is the number?`,
-            options: ["45", "50", "30", "60"],
-            correctOptionIndex: 1
-          });
-          questions.push({
-            text: `The average of 5 numbers is 12. If 4 of the numbers are 10, 15, 8, and 12, what is the 5th number?`,
-            options: ["13", "14", "15", "16"],
-            correctOptionIndex: 2
-          });
-        } else {
-          // Advanced math for higher grades
-          questions.push({
-            text: `Simplify: 3(2x - 4) - 2(x + 5)`,
-            options: ["4x - 22", "4x - 10", "6x - 22", "8x - 22"],
-            correctOptionIndex: 0
-          });
-          questions.push({
-            text: `What is the solution to the quadratic equation x² - 5x + 6 = 0?`,
-            options: ["x = 2, x = 3", "x = -2, x = -3", "x = 2, x = -3", "x = -2, x = 3"],
-            correctOptionIndex: 0
-          });
-          questions.push({
-            text: `If a triangle has sides of length 6, 8, and 10, what type of triangle is it?`,
-            options: ["Equilateral", "Isosceles", "Scalene", "Right"],
-            correctOptionIndex: 3
-          });
-          questions.push({
-            text: `What is the circumference of a circle with radius 7 cm? (Use π = 3.14)`,
-            options: ["43.96 cm", "21.98 cm", "153.86 cm", "43.96 cm²"],
-            correctOptionIndex: 0
-          });
-          questions.push({
-            text: `If f(x) = 2x² - 3x + 4, what is f(2)?`,
-            options: ["6", "7", "8", "9"],
-            correctOptionIndex: 2
-          });
-        }
-        
-        // Add question IDs
-        return questions.map((q, i) => ({
-          id: `gen-${Date.now()}-${i}`,
-          ...q
-        }));
-      };
+      if (subject === "math") {
+        questions = `1. If x + 3 = 7, what is the value of x?
+A) 2
+B) 3
+C) 4
+D) 10
+
+2. What is the area of a rectangle with length 8 cm and width 5 cm?
+A) 13 cm²
+B) 26 cm²
+C) 40 cm²
+D) 80 cm²
+
+3. Solve for y: 2y - 5 = 11
+A) y = 3
+B) y = 8
+C) y = 16
+D) y = -3
+
+4. What is 25% of 80?
+A) 20
+B) 40
+C) 60
+D) 100`;
+      } else if (subject === "english") {
+        questions = `1. Which of the following is a proper noun?
+A) book
+B) London
+C) happy
+D) quickly
+
+2. Choose the sentence with the correct punctuation:
+A) Where did you go yesterday.
+B) Where did you go yesterday!
+C) Where did you go yesterday?
+D) Where did you go, yesterday
+
+3. Identify the verb in this sentence: "The students completed their assignments."
+A) students
+B) their
+C) completed
+D) assignments
+
+4. Which word is a synonym for "happy"?
+A) sad
+B) angry
+C) joyful
+D) tired`;
+      } else if (subject === "ict") {
+        questions = `1. What does CPU stand for?
+A) Central Processing Unit
+B) Computer Processing Unit
+C) Central Program Unit
+D) Control Processing Unit
+
+2. Which of these is an input device?
+A) Printer
+B) Monitor
+C) Speaker
+D) Keyboard
+
+3. What is the main purpose of an operating system?
+A) To create documents
+B) To connect to the internet
+C) To manage hardware and software resources
+D) To play games
+
+4. What does HTML stand for?
+A) Hyper Text Markup Language
+B) High Tech Modern Language
+C) Hyper Transfer Markup Language
+D) Hyper Text Making Links`;
+      }
       
-      const questions = generateMockQuestions();
-      setGeneratedQuestions(JSON.stringify(questions, null, 2));
-      setIsGeneratingQuestions(false);
+      setGeneratedQuestions(questions);
+      setIsGenerating(false);
       
       toast({
         title: "Questions generated!",
-        description: `Generated ${questions.length} questions for ${topic} (Grade ${grade})`,
+        description: `Generated ${questions.split('\n\n').length} questions for grade ${selectedGrade}`,
       });
     }, 2000);
   };
@@ -145,28 +124,89 @@ const QuestionGeneratorTab: React.FC<QuestionGeneratorTabProps> = ({ grades }) =
   const handleCopyQuestions = () => {
     navigator.clipboard.writeText(generatedQuestions);
     toast({
-      title: "Questions copied!",
-      description: "The generated questions have been copied to clipboard.",
+      title: "Copied to clipboard!",
+      description: "Questions have been copied to clipboard.",
     });
   };
 
+  // Get topics based on subject
+  const getTopics = () => {
+    switch (subject) {
+      case "math":
+        return [
+          { value: "algebra", label: "Algebra" },
+          { value: "geometry", label: "Geometry" },
+          { value: "arithmetic", label: "Arithmetic" },
+          { value: "fractions", label: "Fractions" },
+          { value: "decimals", label: "Decimals" },
+        ];
+      case "english":
+        return [
+          { value: "grammar", label: "Grammar" },
+          { value: "vocabulary", label: "Vocabulary" },
+          { value: "reading", label: "Reading Comprehension" },
+          { value: "writing", label: "Writing" },
+          { value: "literature", label: "Literature" },
+        ];
+      case "ict":
+        return [
+          { value: "hardware", label: "Computer Hardware" },
+          { value: "software", label: "Software" },
+          { value: "networks", label: "Networks" },
+          { value: "programming", label: "Programming Basics" },
+          { value: "internet", label: "Internet & Web" },
+        ];
+      default:
+        return [
+          { value: "algebra", label: "Algebra" },
+          { value: "geometry", label: "Geometry" },
+        ];
+    }
+  };
+
+  const getSubjectIcon = () => {
+    switch (subject) {
+      case "math": return <BookOpen size={20} className="text-purple-500" />;
+      case "english": return <BookText size={20} className="text-green-500" />;
+      case "ict": return <Laptop size={20} className="text-orange-500" />;
+      default: return <BookOpen size={20} className="text-purple-500" />;
+    }
+  };
+
+  // Get color based on subject
+  const getSubjectColor = () => {
+    switch (subject) {
+      case "math": return "bg-purple-600 hover:bg-purple-700";
+      case "english": return "bg-green-600 hover:bg-green-700";
+      case "ict": return "bg-orange-600 hover:bg-orange-700";
+      default: return "bg-purple-600 hover:bg-purple-700";
+    }
+  };
+
+  const getSubjectExample = () => {
+    switch (subject) {
+      case "math": return "e.g., 'If x + 3 = 7, what is x?'";
+      case "english": return "e.g., 'Identify the noun in this sentence.'";
+      case "ict": return "e.g., 'What does CPU stand for?'";
+      default: return "e.g., 'What is 2 + 2?'";
+    }
+  };
+
   return (
-    <Card className="border-none">
-      <CardContent className="p-6">
-        <h2 className="text-xl font-semibold mb-4">AI Math Question Generator</h2>
-        <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        {getSubjectIcon()}
+        <h2 className="text-xl font-semibold">{subject.charAt(0).toUpperCase() + subject.slice(1)} Question Generator</h2>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Generate {subject.charAt(0).toUpperCase() + subject.slice(1)} Questions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="topic" className="mb-2 block">Math Topic</Label>
-              <Input
-                id="topic"
-                placeholder="E.g., Fractions, Algebra, Geometry"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="aiGradeLevel" className="mb-2 block">Grade Level</Label>
+              <label className="text-sm font-medium mb-1 block">Grade Level</label>
               <Select value={selectedGrade} onValueChange={setSelectedGrade}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select grade" />
@@ -178,42 +218,135 @@ const QuestionGeneratorTab: React.FC<QuestionGeneratorTabProps> = ({ grades }) =
                 </SelectContent>
               </Select>
             </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Topics</label>
+              <Select
+                value={selectedTopics.length > 0 ? selectedTopics[0] : undefined}
+                onValueChange={(value) => setSelectedTopics([value])}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select topic" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getTopics().map(topic => (
+                    <SelectItem key={topic.value} value={topic.value}>{topic.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
-          <Button
-            onClick={handleGenerateQuestions}
-            className="bg-quiz-teal text-white"
-            disabled={isGeneratingQuestions}
-          >
-            {isGeneratingQuestions ? "Generating Questions..." : "Generate Math Questions"}
-          </Button>
+          <div>
+            <Button 
+              onClick={handleGenerateClick} 
+              disabled={isGenerating}
+              className={`w-full ${getSubjectColor()}`}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>Generate Questions</>
+              )}
+            </Button>
+          </div>
           
           {generatedQuestions && (
-            <div className="mt-4">
-              <Label htmlFor="generatedQuestions">Generated Questions</Label>
-              <div className="relative">
-                <Textarea
-                  id="generatedQuestions"
-                  className="min-h-[200px] font-mono text-sm"
-                  value={generatedQuestions}
-                  readOnly
-                />
-                <Button
-                  className="absolute top-2 right-2 bg-quiz-purple"
-                  size="sm"
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium">Generated Questions</label>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
                   onClick={handleCopyQuestions}
+                  className="flex items-center gap-1"
                 >
-                  Copy All
+                  <Copy size={14} />
+                  Copy
                 </Button>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Copy these questions to use when creating a new quiz.
+              <Textarea
+                value={generatedQuestions}
+                readOnly
+                rows={10}
+                className="font-mono text-sm"
+              />
+              <p className="text-sm text-muted-foreground">
+                These questions are machine-generated. Please review for accuracy before use.
               </p>
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+        <CardFooter className="flex justify-between border-t pt-5">
+          <div className="text-sm text-muted-foreground">
+            Powered by AI to generate {subject}-specific questions
+          </div>
+          <Button variant="outline" onClick={() => window.open("#", "_blank")}>
+            Learn More
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Example {subject.charAt(0).toUpperCase() + subject.slice(1)} Questions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            Here are some example questions for {subject.charAt(0).toUpperCase() + subject.slice(1)} that you can use as inspiration:
+          </p>
+          
+          <div className="space-y-4 p-4 bg-gray-50 rounded-md">
+            {subject === "math" && (
+              <>
+                <div>
+                  <p className="font-medium">Multiple Choice:</p>
+                  <p>If x + 5 = 12, what is the value of x?</p>
+                  <p>A) 5&nbsp;&nbsp;&nbsp;B) 7&nbsp;&nbsp;&nbsp;C) 12&nbsp;&nbsp;&nbsp;D) 17</p>
+                </div>
+                <div>
+                  <p className="font-medium">True/False:</p>
+                  <p>The sum of the angles in a triangle is 180 degrees.</p>
+                </div>
+              </>
+            )}
+            
+            {subject === "english" && (
+              <>
+                <div>
+                  <p className="font-medium">Fill in the blank:</p>
+                  <p>The cat sat ___ the mat.</p>
+                  <p>A) on&nbsp;&nbsp;&nbsp;B) in&nbsp;&nbsp;&nbsp;C) at&nbsp;&nbsp;&nbsp;D) by</p>
+                </div>
+                <div>
+                  <p className="font-medium">Vocabulary:</p>
+                  <p>What does the word "ecstatic" mean?</p>
+                  <p>A) extremely happy&nbsp;&nbsp;&nbsp;B) very angry&nbsp;&nbsp;&nbsp;C) deeply sad&nbsp;&nbsp;&nbsp;D) completely bored</p>
+                </div>
+              </>
+            )}
+            
+            {subject === "ict" && (
+              <>
+                <div>
+                  <p className="font-medium">Hardware:</p>
+                  <p>Which device is used for taking input from the user?</p>
+                  <p>A) Monitor&nbsp;&nbsp;&nbsp;B) Keyboard&nbsp;&nbsp;&nbsp;C) Printer&nbsp;&nbsp;&nbsp;D) Speaker</p>
+                </div>
+                <div>
+                  <p className="font-medium">Software:</p>
+                  <p>Which of these is NOT an operating system?</p>
+                  <p>A) Windows 11&nbsp;&nbsp;&nbsp;B) macOS&nbsp;&nbsp;&nbsp;C) Excel&nbsp;&nbsp;&nbsp;D) Linux</p>
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

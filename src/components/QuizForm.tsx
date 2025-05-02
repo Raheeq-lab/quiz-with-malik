@@ -7,13 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { X, Plus, Trash2, Image, Upload } from "lucide-react";
+import { X, Plus, Trash2, Image, Upload, BookOpen, BookText, Laptop } from "lucide-react";
 import { Quiz, QuizQuestion } from '@/types/quiz';
+import SubjectSelector from '@/components/SubjectSelector';
 
 interface QuizFormProps {
   grades: number[];
   onSave: (quiz: Quiz) => void;
   onCancel: () => void;
+  subject?: "math" | "english" | "ict";
 }
 
 const generateAccessCode = () => {
@@ -32,11 +34,12 @@ const initialQuestion: QuizQuestion = {
   correctOptionIndex: 0
 };
 
-const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
+const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel, subject = "math" }) => {
   const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedGrade, setSelectedGrade] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<"math" | "english" | "ict">(subject);
   const [timeLimit, setTimeLimit] = useState<number>(30);
   const [questions, setQuestions] = useState<QuizQuestion[]>([initialQuestion]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -126,6 +129,25 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
       fileInputRefs.current[questionIndex]!.value = '';
     }
   };
+
+  const getSubjectIcon = () => {
+    switch (selectedSubject) {
+      case "math": return <BookOpen className="text-purple-500" />;
+      case "english": return <BookText className="text-green-500" />;
+      case "ict": return <Laptop className="text-orange-500" />;
+      default: return <BookOpen className="text-purple-500" />;
+    }
+  };
+
+  // Get color based on subject
+  const getSubjectColorClass = () => {
+    switch (selectedSubject) {
+      case "math": return "border-purple-300 bg-purple-50 text-purple-900";
+      case "english": return "border-green-300 bg-green-50 text-green-900";
+      case "ict": return "border-orange-300 bg-orange-50 text-orange-900";
+      default: return "border-purple-300 bg-purple-50 text-purple-900";
+    }
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,6 +202,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
       title,
       description,
       gradeLevel: parseInt(selectedGrade),
+      subject: selectedSubject,
       timeLimit,
       accessCode: generateAccessCode(),
       createdBy: JSON.parse(localStorage.getItem('mathWithMalikTeacher') || '{}').id || 'unknown',
@@ -193,7 +216,10 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Create New Quiz</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          {getSubjectIcon()}
+          <span>Create New Quiz</span>
+        </CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
@@ -220,7 +246,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
               />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="grade">Grade Level</Label>
                 <Select value={selectedGrade} onValueChange={setSelectedGrade}>
@@ -235,6 +261,13 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
                 </Select>
               </div>
               
+              <div>
+                <SubjectSelector 
+                  selectedSubject={selectedSubject}
+                  onChange={(subject) => setSelectedSubject(subject as "math" | "english" | "ict")}
+                />
+              </div>
+
               <div>
                 <Label htmlFor="timeLimit">Time Limit (seconds per question)</Label>
                 <Input
@@ -265,7 +298,7 @@ const QuizForm: React.FC<QuizFormProps> = ({ grades, onSave, onCancel }) => {
             </div>
             
             {questions.map((question, qIndex) => (
-              <div key={question.id} className="border rounded-lg p-4 space-y-4">
+              <div key={question.id} className={`border rounded-lg p-4 space-y-4 ${getSubjectColorClass()}`}>
                 <div className="flex justify-between items-start">
                   <h4 className="text-md font-medium">Question {qIndex + 1}</h4>
                   <Button

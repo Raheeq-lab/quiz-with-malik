@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { useToast } from "@/components/ui/use-toast";
 import { Clock, CheckCircle, XCircle } from "lucide-react";
 import { QuizQuestion, StudentAnswer } from '@/types/quiz';
+import { BookOpen, BookText, Laptop } from "lucide-react";
 
 interface StudentData {
   name: string;
@@ -96,6 +97,59 @@ const StudentQuiz: React.FC = () => {
     return () => clearInterval(timer);
   }, [isLoading, quizCompleted, currentQuestionIndex]);
 
+  // Get color based on subject
+  const getSubjectColor = () => {
+    if (!quiz || !quiz.subject) return {};
+
+    switch (quiz.subject) {
+      case "math":
+        return {
+          header: "bg-purple-100",
+          button: "bg-purple-600 hover:bg-purple-700",
+          selected: "border-purple-500 bg-purple-50",
+          text: "text-purple-500",
+          completed: "text-purple-600"
+        };
+      case "english":
+        return {
+          header: "bg-green-100",
+          button: "bg-green-600 hover:bg-green-700",
+          selected: "border-green-500 bg-green-50",
+          text: "text-green-500",
+          completed: "text-green-600"
+        };
+      case "ict":
+        return {
+          header: "bg-orange-100",
+          button: "bg-orange-600 hover:bg-orange-700",
+          selected: "border-orange-500 bg-orange-50",
+          text: "text-orange-500",
+          completed: "text-orange-600"
+        };
+      default:
+        return {
+          header: "bg-quiz-light",
+          button: "bg-quiz-purple",
+          selected: "border-quiz-purple bg-quiz-purple/10",
+          text: "text-quiz-purple",
+          completed: "text-quiz-purple"
+        };
+    }
+  };
+
+  const getSubjectIcon = () => {
+    if (!quiz || !quiz.subject) return null;
+
+    const colors = getSubjectColor();
+    
+    switch (quiz.subject) {
+      case "math": return <BookOpen size={16} className={colors.text} />;
+      case "english": return <BookText size={16} className={colors.text} />;
+      case "ict": return <Laptop size={16} className={colors.text} />;
+      default: return <BookOpen size={16} className={colors.text} />;
+    }
+  };
+
   const handleOptionSelect = (optionIndex: number) => {
     setSelectedOption(optionIndex);
   };
@@ -179,6 +233,8 @@ const StudentQuiz: React.FC = () => {
     );
   }
 
+  const colors = getSubjectColor();
+
   if (quizCompleted) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-quiz-light">
@@ -188,7 +244,7 @@ const StudentQuiz: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-6 text-center">
             <div className="py-6">
-              <div className="text-6xl font-bold text-quiz-purple mb-2">{score}/{quiz?.questions.length}</div>
+              <div className={`text-6xl font-bold mb-2 ${colors.completed}`}>{score}/{quiz?.questions.length}</div>
               <p className="text-gray-500">Your Score</p>
             </div>
             
@@ -202,7 +258,7 @@ const StudentQuiz: React.FC = () => {
           </CardContent>
           <CardFooter>
             <Button 
-              className="w-full bg-quiz-purple" 
+              className={`w-full ${colors.button}`}
               onClick={() => navigate('/student-join')}
             >
               Join Another Quiz
@@ -217,18 +273,19 @@ const StudentQuiz: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-quiz-light">
-      <header className="bg-white shadow-sm p-4">
+      <header className={`shadow-sm p-4 ${colors.header}`}>
         <div className="container mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-semibold text-quiz-purple">
+            <h1 className={`text-xl font-semibold flex items-center gap-2 ${colors.text}`}>
+              {getSubjectIcon()}
               {quiz?.title}
             </h1>
             <p className="text-gray-500 text-sm">
               Grade {quiz?.gradeLevel} • Question {currentQuestionIndex + 1} of {quiz?.questions.length}
             </p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-quiz-light rounded-full">
-            <Clock size={16} className="text-quiz-purple" />
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/80 rounded-full shadow-sm">
+            <Clock size={16} className={colors.text} />
             <span className="font-mono font-medium">{formatTime(timeLeft)}</span>
           </div>
         </div>
@@ -258,13 +315,13 @@ const StudentQuiz: React.FC = () => {
                   onClick={() => handleOptionSelect(index)}
                   className={`p-4 rounded-lg cursor-pointer border transition-colors ${
                     selectedOption === index 
-                      ? 'border-quiz-purple bg-quiz-purple/10' 
-                      : 'border-gray-200 hover:border-quiz-purple/50 bg-white'
+                      ? colors.selected
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 flex items-center justify-center rounded-full ${
-                      selectedOption === index ? 'bg-quiz-purple text-white' : 'bg-gray-100'
+                      selectedOption === index ? colors.button + " text-white" : 'bg-gray-100'
                     }`}>
                       {String.fromCharCode(65 + index)}
                     </div>
@@ -283,7 +340,7 @@ const StudentQuiz: React.FC = () => {
             <Button 
               onClick={handleNextQuestion}
               disabled={selectedOption === null}
-              className="bg-quiz-purple"
+              className={colors.button}
             >
               {currentQuestionIndex === quiz?.questions.length - 1 ? "Finish" : "Next"}
             </Button>

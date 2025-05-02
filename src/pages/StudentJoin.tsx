@@ -2,140 +2,198 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { BookOpen, BookText, Laptop } from 'lucide-react';
 import NavBar from '@/components/NavBar';
+import SubjectSelector from '@/components/SubjectSelector';
 
 const StudentJoin: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [name, setName] = useState('');
   const [accessCode, setAccessCode] = useState('');
-  const [studentName, setStudentName] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState<string>("math");
   const [isJoining, setIsJoining] = useState(false);
   
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!name.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter your name to join the quiz.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!accessCode.trim()) {
+      toast({
+        title: "Access code required",
+        description: "Please enter the quiz access code provided by your teacher.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsJoining(true);
     
-    if (!accessCode.trim() || !studentName.trim()) {
-      toast({
-        title: "Information required",
-        description: "Please enter both your name and the quiz code.",
-        variant: "destructive",
-      });
-      setIsJoining(false);
-      return;
-    }
+    // Check if the quiz exists
+    const quizzesString = localStorage.getItem('mathWithMalikQuizzes');
+    const quizzes = quizzesString ? JSON.parse(quizzesString) : [];
     
-    // Check if quiz code exists (in a real app, this would be an API call to Firebase)
-    const savedQuizzes = localStorage.getItem('mathWithMalikQuizzes');
-    const quizzes = savedQuizzes ? JSON.parse(savedQuizzes) : [];
-    const matchingQuiz = quizzes.find((q: any) => q.accessCode === accessCode.toUpperCase());
+    // Check for both quizzes and lessons with matching access code
+    const quiz = quizzes.find((q: any) => 
+      q.accessCode === accessCode && q.subject === selectedSubject
+    );
     
-    if (!matchingQuiz) {
-      toast({
-        title: "Invalid quiz code",
-        description: "The quiz code you entered doesn't match any active quiz.",
-        variant: "destructive",
-      });
-      setIsJoining(false);
-      return;
-    }
+    const lessonsString = localStorage.getItem('mathWithMalikLessons');
+    const lessons = lessonsString ? JSON.parse(lessonsString) : [];
     
-    // Store student information for the quiz
-    localStorage.setItem('mathWithMalikStudent', JSON.stringify({
-      name: studentName,
-      quizId: matchingQuiz.id,
-      quizTitle: matchingQuiz.title,
-      gradeLevel: matchingQuiz.gradeLevel,
-      joinedAt: new Date().toISOString()
-    }));
+    const lesson = lessons.find((l: any) => 
+      l.accessCode === accessCode && l.subject === selectedSubject
+    );
     
     setTimeout(() => {
-      toast({
-        title: "Successfully joined!",
-        description: `You've joined ${matchingQuiz.title}.`,
-      });
       setIsJoining(false);
-      navigate('/student-quiz'); 
-    }, 1000);
+      
+      if (quiz) {
+        // Store student data
+        const studentData = {
+          name: name,
+          quizId: quiz.id,
+          quizTitle: quiz.title,
+          gradeLevel: quiz.gradeLevel,
+          subject: quiz.subject
+        };
+        
+        localStorage.setItem('mathWithMalikStudent', JSON.stringify(studentData));
+        
+        toast({
+          title: "Quiz joined!",
+          description: `Welcome to ${quiz.title}. Good luck!`,
+        });
+        
+        navigate('/student-quiz');
+      } else if (lesson) {
+        // Store student data for lesson
+        const studentData = {
+          name: name,
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          gradeLevel: lesson.gradeLevel,
+          subject: lesson.subject
+        };
+        
+        localStorage.setItem('mathWithMalikStudent', JSON.stringify(studentData));
+        
+        toast({
+          title: "Lesson joined!",
+          description: `Welcome to ${lesson.title}. Let's learn!`,
+        });
+        
+        // For now, navigate to the same page since we haven't implemented the lesson view
+        toast({
+          title: "Feature Coming Soon",
+          description: "The lesson view is currently being developed.",
+        });
+      } else {
+        toast({
+          title: "Invalid access code",
+          description: `No ${selectedSubject} content found with this access code. Please check and try again.`,
+          variant: "destructive",
+        });
+      }
+    }, 1500);
+  };
+
+  const getSubjectIcon = () => {
+    switch (selectedSubject) {
+      case "math": return <BookOpen size={24} className="text-purple-500" />;
+      case "english": return <BookText size={24} className="text-green-500" />;
+      case "ict": return <Laptop size={24} className="text-orange-500" />;
+      default: return <BookOpen size={24} className="text-purple-500" />;
+    }
+  };
+
+  const getSubjectColor = () => {
+    switch (selectedSubject) {
+      case "math": return "bg-purple-600 hover:bg-purple-700";
+      case "english": return "bg-green-600 hover:bg-green-700";
+      case "ict": return "bg-orange-600 hover:bg-orange-700";
+      default: return "bg-purple-600 hover:bg-purple-700";
+    }
   };
   
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
       
-      <main className="flex-1 flex flex-col md:flex-row bg-quiz-light">
-        <div className="md:w-1/2 p-4 flex items-center justify-center">
-          <Card className="w-full max-w-md shadow-lg animate-fade-in">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl gradient-text">Join Math Quiz</CardTitle>
-              <CardDescription>
-                Enter the quiz code provided by your teacher
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent>
-              <form onSubmit={handleJoin} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="studentName" className="block text-sm font-medium">
-                    Your Name
-                  </label>
-                  <Input
-                    id="studentName"
-                    placeholder="Enter your name"
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="accessCode" className="block text-sm font-medium">
-                    Quiz Code
-                  </label>
-                  <Input
-                    id="accessCode"
-                    placeholder="Enter the 6-digit code"
-                    value={accessCode}
-                    onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                    className="access-code text-center text-lg"
-                    maxLength={6}
-                    required
-                  />
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="w-full bg-quiz-teal hover:bg-opacity-90"
-                  disabled={isJoining}
-                >
-                  {isJoining ? "Joining..." : "Start Quiz"}
-                </Button>
-              </form>
+      <main className="flex-1 flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              {getSubjectIcon()}
+            </div>
+            <CardTitle className="text-2xl gradient-text">Join a Quiz or Lesson</CardTitle>
+            <CardDescription>
+              Enter your name and the access code to join
+            </CardDescription>
+          </CardHeader>
+          
+          <form onSubmit={handleJoin}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Your Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
               
-              <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
-                <h3 className="font-semibold text-sm text-gray-700 mb-2">How to join:</h3>
-                <ol className="text-sm text-gray-600 space-y-2 list-decimal pl-5">
-                  <li>Enter your name so your teacher can identify you</li>
-                  <li>Enter the 6-digit quiz code provided by your teacher</li>
-                  <li>Click "Start Quiz" to begin</li>
-                </ol>
+              <div className="space-y-2">
+                <Label htmlFor="accessCode">Access Code</Label>
+                <Input
+                  id="accessCode"
+                  placeholder="Enter 6-digit code (e.g., ABC123)"
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                  required
+                  maxLength={6}
+                  className="tracking-widest text-center uppercase"
+                />
+                <p className="text-xs text-gray-500">
+                  The 6-letter code provided by your teacher
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-4">
+                <Label>Select Subject</Label>
+                <SubjectSelector
+                  selectedSubject={selectedSubject}
+                  onChange={setSelectedSubject}
+                />
               </div>
             </CardContent>
-          </Card>
-        </div>
-        
-        <div className="md:w-1/2 p-4 hidden md:flex items-center justify-center">
-          <div className="rounded-lg overflow-hidden shadow-xl">
-            <img 
-              src="/lovable-uploads/1546979f-b3c0-4aa7-bfd1-50f90294a353.png" 
-              alt="Students ready for the math quiz" 
-              className="w-full h-auto"
-            />
-          </div>
-        </div>
+            
+            <CardFooter>
+              <Button 
+                type="submit" 
+                className={`w-full ${getSubjectColor()}`}
+                disabled={isJoining}
+              >
+                {isJoining ? 'Joining...' : 'Join Now'}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
       </main>
     </div>
   );

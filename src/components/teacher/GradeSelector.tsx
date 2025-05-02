@@ -5,10 +5,11 @@ import { Label } from "@/components/ui/label";
 
 interface GradeSelectorProps {
   selectedGrades: number[];
-  onChange: (grades: number[]) => void;  // Changed from onGradeChange to onChange
+  onChange: (grades: number[]) => void;  
+  subject?: "math" | "english" | "ict";
 }
 
-const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onChange }) => {
+const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onChange, subject = "math" }) => {
   const grades = [3, 4, 5, 6, 7, 8, 9, 10];
   
   const handleGradeChange = (grade: number) => {
@@ -16,6 +17,16 @@ const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onChange 
       onChange(selectedGrades.filter(g => g !== grade));
     } else {
       onChange([...selectedGrades, grade]);
+    }
+  };
+
+  // Get color based on subject
+  const getSubjectColor = () => {
+    switch (subject) {
+      case "math": return "text-purple-700 border-purple-300 bg-purple-50";
+      case "english": return "text-green-700 border-green-300 bg-green-50";
+      case "ict": return "text-orange-700 border-orange-300 bg-orange-50";
+      default: return "text-purple-700 border-purple-300 bg-purple-50";
     }
   };
   
@@ -29,6 +40,7 @@ const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onChange 
               id={`grade-${grade}`} 
               checked={selectedGrades.includes(grade)}
               onCheckedChange={() => handleGradeChange(grade)}
+              className={selectedGrades.includes(grade) ? getSubjectColor() : ""}
             />
             <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
               Grade {grade}

@@ -4,6 +4,7 @@ export interface Quiz {
   title: string;
   description: string;
   gradeLevel: number;
+  subject: "math" | "english" | "ict"; // Added subject field
   timeLimit: number; // in seconds
   accessCode: string;
   createdBy: string;
@@ -44,4 +45,35 @@ export interface LeaderboardEntry {
   score: number;
   timeTaken: number;
   completedAt: string;
+}
+
+export interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  gradeLevel: number;
+  subject: "math" | "english" | "ict";
+  content: LessonContent[];
+  createdBy: string;
+  createdAt: string;
+  accessCode: string;
+}
+
+export interface LessonContent {
+  id: string;
+  type: "text" | "image" | "imageWithPrompt" | "dragAndDrop" | "labeling";
+  content: string;
+  imageUrl?: string;
+  prompt?: string;
+  options?: string[];
+  solution?: string | string[];
+}
+
+export interface TeacherData {
+  id: string;
+  name: string;
+  email: string;
+  school?: string;
+  grades: number[];
+  subjects: ("math" | "english" | "ict")[];
 }

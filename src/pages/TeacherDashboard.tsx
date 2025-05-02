@@ -3,14 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Book, FileText, Users, BarChart } from "lucide-react";
-import { Quiz, StudentQuizResult } from '@/types/quiz';
+import { Book, FileText, Users, BarChart, Laptop, BookText } from "lucide-react";
+import { Quiz, Lesson, StudentQuizResult, TeacherData } from '@/types/quiz';
 import QuizForm from '@/components/QuizForm';
+import LessonBuilder from '@/components/teacher/LessonBuilder';
 import DashboardHeader from '@/components/teacher/DashboardHeader';
 import DashboardFooter from '@/components/teacher/DashboardFooter';
 import QuizzesTab from '@/components/teacher/tabs/QuizzesTab';
 import PerformanceTab from '@/components/teacher/tabs/PerformanceTab';
 import QuestionGeneratorTab from '@/components/teacher/tabs/QuestionGeneratorTab';
+import LessonsTab from '@/components/teacher/tabs/LessonsTab';
+import SubjectSelector from '@/components/SubjectSelector';
 import { 
   getLeaderboardEntries, 
   findQuizById, 
@@ -18,22 +21,17 @@ import {
   getTotalCompletions 
 } from '@/utils/dashboardUtils';
 
-interface TeacherData {
-  id: string;
-  name: string;
-  email: string;
-  school?: string;
-  grades: number[];
-}
-
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [teacherData, setTeacherData] = useState<TeacherData | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showQuizForm, setShowQuizForm] = useState(false);
+  const [showLessonBuilder, setShowLessonBuilder] = useState(false);
   const [results, setResults] = useState<StudentQuizResult[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<"math" | "english" | "ict">("math");
   
   useEffect(() => {
     // Check if user is logged in
@@ -51,6 +49,12 @@ const TeacherDashboard: React.FC = () => {
     const storedQuizzes = localStorage.getItem('mathWithMalikQuizzes');
     if (storedQuizzes) {
       setQuizzes(JSON.parse(storedQuizzes));
+    }
+
+    // Load lessons
+    const storedLessons = localStorage.getItem('mathWithMalikLessons');
+    if (storedLessons) {
+      setLessons(JSON.parse(storedLessons));
     }
 
     // Load quiz results
@@ -75,24 +79,52 @@ const TeacherDashboard: React.FC = () => {
     
     toast({
       title: "Quiz created!",
-      description: `Your new quiz "${quiz.title}" is ready. Share the code with your students.`,
+      description: `Your new ${quiz.subject} quiz "${quiz.title}" is ready. Share the code with your students.`,
+    });
+  };
+
+  const handleCreateLesson = (lesson: Lesson) => {
+    const updatedLessons = [...lessons, lesson];
+    setLessons(updatedLessons);
+    localStorage.setItem('mathWithMalikLessons', JSON.stringify(updatedLessons));
+    setShowLessonBuilder(false);
+    
+    toast({
+      title: "Lesson created!",
+      description: `Your new ${lesson.subject} lesson "${lesson.title}" is ready. Share the code with your students.`,
     });
   };
   
   const handleCancelQuizForm = () => {
     setShowQuizForm(false);
   };
+
+  const handleCancelLessonBuilder = () => {
+    setShowLessonBuilder(false);
+  };
   
-  const handleCopyCode = (quizTitle: string) => {
+  const handleCopyCode = (title: string) => {
     toast({
       title: "Code copied!",
-      description: `The access code for "${quizTitle}" has been copied to clipboard.`,
+      description: `The access code for "${title}" has been copied to clipboard.`,
     });
+  };
+
+  const getSubjectIcon = () => {
+    switch (selectedSubject) {
+      case "math": return <Book className="text-purple-500" />;
+      case "english": return <BookText className="text-green-500" />;
+      case "ict": return <Laptop className="text-orange-500" />;
+      default: return <Book className="text-purple-500" />;
+    }
   };
   
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
+
+  const filteredQuizzes = quizzes.filter(quiz => quiz.subject === selectedSubject);
+  const filteredLessons = lessons.filter(lesson => lesson.subject === selectedSubject);
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -103,29 +135,50 @@ const TeacherDashboard: React.FC = () => {
       
       <main className="flex-1 container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-8">Teacher Dashboard</h1>
+
+        <div className="mb-6">
+          <SubjectSelector 
+            selectedSubject={selectedSubject}
+            onChange={(subject) => setSelectedSubject(subject as "math" | "english" | "ict")}
+          />
+        </div>
         
-        {!showQuizForm ? (
+        {!showQuizForm && !showLessonBuilder ? (
           <Tabs defaultValue="quizzes">
             <TabsList className="mb-8">
               <TabsTrigger value="quizzes" className="flex items-center gap-2">
                 <Book size={16} />
-                <span>Quizzes</span>
+                <span>Quiz Zone</span>
+              </TabsTrigger>
+              <TabsTrigger value="lessons" className="flex items-center gap-2">
+                <FileText size={16} />
+                <span>Lesson Builder</span>
               </TabsTrigger>
               <TabsTrigger value="performance" className="flex items-center gap-2">
                 <BarChart size={16} />
                 <span>Performance</span>
               </TabsTrigger>
               <TabsTrigger value="generate" className="flex items-center gap-2">
-                <FileText size={16} />
-                <span>Question Generator</span>
+                {getSubjectIcon()}
+                <span>Content Generator</span>
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="quizzes">
               <QuizzesTab 
-                quizzes={quizzes} 
+                quizzes={filteredQuizzes} 
                 onCreateQuiz={() => setShowQuizForm(true)} 
                 onCopyCode={handleCopyCode} 
+                subject={selectedSubject}
+              />
+            </TabsContent>
+
+            <TabsContent value="lessons">
+              <LessonsTab 
+                lessons={filteredLessons} 
+                onCreateLesson={() => setShowLessonBuilder(true)} 
+                onCopyCode={handleCopyCode} 
+                subject={selectedSubject}
               />
             </TabsContent>
             
@@ -136,18 +189,30 @@ const TeacherDashboard: React.FC = () => {
                 getTotalCompletions={() => getTotalCompletions(results)}
                 getLeaderboardEntries={(quizId) => getLeaderboardEntries(results, quizId)}
                 findQuizById={(id) => findQuizById(quizzes, id)}
+                subject={selectedSubject}
               />
             </TabsContent>
             
             <TabsContent value="generate">
-              <QuestionGeneratorTab grades={teacherData?.grades || []} />
+              <QuestionGeneratorTab 
+                grades={teacherData?.grades || []}
+                subject={selectedSubject}
+              />
             </TabsContent>
           </Tabs>
-        ) : (
+        ) : showQuizForm ? (
           <QuizForm 
             grades={teacherData?.grades || []} 
             onSave={handleCreateQuiz}
             onCancel={handleCancelQuizForm}
+            subject={selectedSubject}
+          />
+        ) : (
+          <LessonBuilder 
+            grades={teacherData?.grades || []} 
+            onSave={handleCreateLesson}
+            onCancel={handleCancelLessonBuilder}
+            subject={selectedSubject}
           />
         )}
       </main>
