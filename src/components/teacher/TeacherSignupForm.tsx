@@ -3,171 +3,159 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import GradeSelector from './GradeSelector';
 
 const TeacherSignupForm: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    school: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [selectedGrades, setSelectedGrades] = useState<number[]>([]);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [school, setSchool] = useState('');
+  const [grades, setGrades] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleGradeChange = (grade: number) => {
-    setSelectedGrades(prev => {
-      if (prev.includes(grade)) {
-        return prev.filter(g => g !== grade);
-      } else {
-        return [...prev, grade].sort((a, b) => a - b);
-      }
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
+    if (!agreedToTerms) {
       toast({
-        title: "Passwords don't match",
-        description: "Please make sure your passwords match.",
+        title: "Terms required",
+        description: "Please agree to the terms and conditions to continue.",
         variant: "destructive",
       });
-      setIsLoading(false);
       return;
     }
-
-    if (selectedGrades.length === 0) {
+    
+    if (grades.length === 0) {
       toast({
-        title: "No grades selected",
+        title: "Grades required",
         description: "Please select at least one grade level you teach.",
         variant: "destructive",
       });
-      setIsLoading(false);
       return;
     }
     
-    // Simulate signup process
+    setIsLoading(true);
+    
+    const teacherId = `teacher-${Date.now()}`;
+    const teacherData = {
+      id: teacherId,
+      name,
+      email,
+      school,
+      grades,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Store teacher data in two places:
+    // 1. As the currently logged in teacher
+    localStorage.setItem('mathWithMalikTeacher', JSON.stringify(teacherData));
+    
+    // 2. In a list of all teachers for the sign-in functionality
+    const storedTeachers = localStorage.getItem('mathWithMalikTeachers');
+    const teachers = storedTeachers ? JSON.parse(storedTeachers) : [];
+    teachers.push(teacherData);
+    localStorage.setItem('mathWithMalikTeachers', JSON.stringify(teachers));
+    
     setTimeout(() => {
-      // In a real app, this would be an API call to Firebase
+      setIsLoading(false);
       toast({
         title: "Account created!",
-        description: "Welcome to Math with Malik. You can now create and manage math quizzes.",
+        description: "Your teacher account has been successfully created.",
       });
-      
-      // Store mock user data (in a real app, this would be handled by Firebase authentication)
-      localStorage.setItem('mathWithMalikTeacher', JSON.stringify({
-        id: 'teacher-' + Date.now(),
-        name: formData.name,
-        email: formData.email,
-        school: formData.school,
-        grades: selectedGrades,
-        isAuthenticated: true
-      }));
-      
-      setIsLoading(false);
       navigate('/teacher-dashboard');
-    }, 1500);
+    }, 1000);
   };
-
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSignup} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
+        <label htmlFor="name" className="block text-sm font-medium">
+          Full Name
+        </label>
         <Input
           id="name"
-          name="name"
-          placeholder="John Doe"
+          placeholder="Your Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
-          value={formData.name}
-          onChange={handleChange}
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <label htmlFor="email" className="block text-sm font-medium">
+          Email
+        </label>
         <Input
           id="email"
-          name="email"
           type="email"
-          placeholder="john.doe@school.edu"
+          placeholder="your.email@school.edu"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
-          value={formData.email}
-          onChange={handleChange}
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="school">School Name</Label>
-        <Input
-          id="school"
-          name="school"
-          placeholder="Lincoln Elementary"
-          required
-          value={formData.school}
-          onChange={handleChange}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <label htmlFor="password" className="block text-sm font-medium">
+          Password
+        </label>
         <Input
           id="password"
-          name="password"
           type="password"
+          placeholder="Create a password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
-          value={formData.password}
-          onChange={handleChange}
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <label htmlFor="school" className="block text-sm font-medium">
+          School Name (Optional)
+        </label>
         <Input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          required
-          value={formData.confirmPassword}
-          onChange={handleChange}
+          id="school"
+          placeholder="Your School's Name"
+          value={school}
+          onChange={(e) => setSchool(e.target.value)}
         />
       </div>
-
-      <GradeSelector 
-        selectedGrades={selectedGrades}
-        onGradeChange={handleGradeChange}
-      />
+      
+      <div className="space-y-2">
+        <label className="block text-sm font-medium mb-2">
+          Which Grades Do You Teach?
+        </label>
+        <GradeSelector 
+          selectedGrades={grades} 
+          onChange={setGrades} 
+        />
+      </div>
+      
+      <div className="flex items-center space-x-2 pt-2">
+        <Checkbox 
+          id="terms" 
+          checked={agreedToTerms}
+          onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+        />
+        <label
+          htmlFor="terms"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          I agree to the terms and conditions
+        </label>
+      </div>
       
       <Button
         type="submit"
         className="w-full bg-quiz-purple hover:bg-opacity-90"
         disabled={isLoading}
       >
-        {isLoading ? "Creating Account..." : "Sign Up"}
+        {isLoading ? "Creating Account..." : "Create Teacher Account"}
       </Button>
-      
-      <p className="text-center text-sm text-gray-500 mt-4">
-        Already have an account?{" "}
-        <a href="#" className="text-quiz-teal hover:underline">
-          Sign In
-        </a>
-      </p>
     </form>
   );
 };
