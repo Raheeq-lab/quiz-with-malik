@@ -5,11 +5,19 @@ import { Label } from "@/components/ui/label";
 
 interface GradeSelectorProps {
   selectedGrades: number[];
-  onGradeChange: (grade: number) => void;
+  onChange: (grades: number[]) => void;  // Changed from onGradeChange to onChange
 }
 
-const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onGradeChange }) => {
+const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onChange }) => {
   const grades = [3, 4, 5, 6, 7, 8, 9, 10];
+  
+  const handleGradeChange = (grade: number) => {
+    if (selectedGrades.includes(grade)) {
+      onChange(selectedGrades.filter(g => g !== grade));
+    } else {
+      onChange([...selectedGrades, grade]);
+    }
+  };
   
   return (
     <div className="space-y-2">
@@ -20,7 +28,7 @@ const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onGradeCh
             <Checkbox 
               id={`grade-${grade}`} 
               checked={selectedGrades.includes(grade)}
-              onCheckedChange={() => onGradeChange(grade)}
+              onCheckedChange={() => handleGradeChange(grade)}
             />
             <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
               Grade {grade}
