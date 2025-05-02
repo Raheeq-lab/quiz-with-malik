@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, BookText } from "lucide-react";
+import { X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp } from "lucide-react";
 import { Lesson, LessonContent } from '@/types/quiz';
 import SubjectSelector from '@/components/SubjectSelector';
+
+interface LearningTypeOption {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}
 
 interface LessonBuilderProps {
   grades: number[];
@@ -41,7 +47,154 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   const [selectedGrade, setSelectedGrade] = useState<string>('');
   const [selectedSubject, setSelectedSubject] = useState<"math" | "english" | "ict">(subject);
   const [contentBlocks, setContentBlocks] = useState<LessonContent[]>([initialContent]);
+  const [selectedLearningType, setSelectedLearningType] = useState<string>('');
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Define learning types based on selected subject
+  const getLearningTypes = (): LearningTypeOption[] => {
+    switch (selectedSubject) {
+      case "math":
+        return [
+          {
+            id: "problem-solving",
+            title: "Problem Solving Practice",
+            description: "Solve step-by-step math problems to build logic and accuracy.",
+            icon: <Brain className="text-purple-600" />
+          },
+          {
+            id: "visual-interactive",
+            title: "Visual & Interactive Learning",
+            description: "Learn through graphs, number lines, and drag-and-drop tools.",
+            icon: <BarChart2 className="text-purple-600" />
+          },
+          {
+            id: "game-based",
+            title: "Game-Based Quizzes",
+            description: "Practice with fun, timed challenges and scoring levels.",
+            icon: <Gamepad2 className="text-purple-600" />
+          },
+          {
+            id: "real-world",
+            title: "Real-World Application",
+            description: "Apply math in budgeting, measuring, and real-life scenarios.",
+            icon: <BriefcaseBusiness className="text-purple-600" />
+          },
+          {
+            id: "math-talks",
+            title: "Math Talks",
+            description: "Explain your solution strategy or compare methods with others.",
+            icon: <MessageSquare className="text-purple-600" />
+          }
+        ];
+      case "english":
+        return [
+          {
+            id: "reading-comprehension",
+            title: "Reading Comprehension",
+            description: "Read passages and answer questions to build understanding.",
+            icon: <FileText className="text-green-600" />
+          },
+          {
+            id: "grammar-practice",
+            title: "Grammar Practice",
+            description: "Work on punctuation, sentence structure, and parts of speech.",
+            icon: <Pen className="text-green-600" />
+          },
+          {
+            id: "picture-based",
+            title: "Picture-Based Writing",
+            description: "Describe or create stories from a visual prompt.",
+            icon: <Image className="text-green-600" />
+          },
+          {
+            id: "speaking-listening",
+            title: "Speaking & Listening",
+            description: "Record spoken answers or respond after watching a clip.",
+            icon: <Headphones className="text-green-600" />
+          },
+          {
+            id: "creative-expression",
+            title: "Creative Expression",
+            description: "Write stories, letters, and journal entries using prompts.",
+            icon: <Pencil className="text-green-600" />
+          }
+        ];
+      case "ict":
+        return [
+          {
+            id: "identify-label",
+            title: "Identify & Label",
+            description: "Name parts of computers, software, or interfaces using images.",
+            icon: <Search className="text-orange-600" />
+          },
+          {
+            id: "watch-demonstrate",
+            title: "Watch & Demonstrate",
+            description: "Watch a task-based video and complete the digital activity.",
+            icon: <Play className="text-orange-600" />
+          },
+          {
+            id: "digital-tool",
+            title: "Digital Tool Use",
+            description: "Practice using basic apps (e.g., Word, Paint, Scratch).",
+            icon: <MousePointer className="text-orange-600" />
+          },
+          {
+            id: "concept-check",
+            title: "Concept Check Quizzes",
+            description: "Answer questions about ICT theory and digital safety.",
+            icon: <CheckSquare className="text-orange-600" />
+          },
+          {
+            id: "create-submit",
+            title: "Create & Submit",
+            description: "Upload original work like a document, design, or code snippet.",
+            icon: <FileUp className="text-orange-600" />
+          }
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Get suggested content blocks based on learning type
+  const getSuggestedContentBlocks = (learningTypeId: string): LessonContent[] => {
+    switch (learningTypeId) {
+      case "problem-solving":
+        return [
+          { id: `content-${Date.now()}-1`, type: 'text', content: 'Problem Statement:' },
+          { id: `content-${Date.now()}-2`, type: 'text', content: 'Step-by-step approach:' }
+        ];
+      case "visual-interactive":
+        return [
+          { id: `content-${Date.now()}-1`, type: 'text', content: 'Introduction:' },
+          { id: `content-${Date.now()}-2`, type: 'image', content: 'Visual representation' },
+          { id: `content-${Date.now()}-3`, type: 'dragAndDrop', content: 'Interactive elements:' }
+        ];
+      case "picture-based":
+        return [
+          { id: `content-${Date.now()}-1`, type: 'text', content: 'Writing prompt:' },
+          { id: `content-${Date.now()}-2`, type: 'imageWithPrompt', content: '' }
+        ];
+      case "identify-label":
+        return [
+          { id: `content-${Date.now()}-1`, type: 'text', content: 'Instructions:' },
+          { id: `content-${Date.now()}-2`, type: 'labeling', content: 'Label the components:' }
+        ];
+      default:
+        return [initialContent];
+    }
+  };
+
+  // Handle learning type selection
+  const handleLearningTypeChange = (typeId: string) => {
+    setSelectedLearningType(typeId);
+    
+    // Update content blocks with suggested template based on learning type
+    if (typeId) {
+      setContentBlocks(getSuggestedContentBlocks(typeId));
+    }
+  };
 
   const handleAddContent = (type: LessonContent['type']) => {
     setContentBlocks(prev => [...prev, {
@@ -157,6 +310,15 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       return;
     }
 
+    if (!selectedLearningType) {
+      toast({
+        title: "Learning type required",
+        description: "Please select a learning type for your lesson.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate content blocks
     for (let i = 0; i < contentBlocks.length; i++) {
       const block = contentBlocks[i];
@@ -196,6 +358,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       description,
       gradeLevel: parseInt(selectedGrade),
       subject: selectedSubject,
+      learningType: selectedLearningType, // Add learning type to the lesson
       content: contentBlocks,
       accessCode: generateAccessCode(),
       createdBy: JSON.parse(localStorage.getItem('mathWithMalikTeacher') || '{}').id || 'unknown',
@@ -506,6 +669,9 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }
   };
   
+  // Get the list of learning types based on subject
+  const learningTypes = getLearningTypes();
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -557,8 +723,39 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
               <div>
                 <SubjectSelector 
                   selectedSubject={selectedSubject}
-                  onChange={(subject) => setSelectedSubject(subject as "math" | "english" | "ict")}
+                  onChange={(subject) => {
+                    setSelectedSubject(subject as "math" | "english" | "ict");
+                    setSelectedLearningType(''); // Reset learning type when subject changes
+                  }}
                 />
+              </div>
+            </div>
+
+            {/* Learning Types Selection */}
+            <div>
+              <Label htmlFor="learningType">Learning Type</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                {learningTypes.map((type) => (
+                  <div
+                    key={type.id}
+                    className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                      selectedLearningType === type.id
+                        ? selectedSubject === "math"
+                          ? "bg-purple-100 border-purple-400"
+                          : selectedSubject === "english"
+                          ? "bg-green-100 border-green-400"
+                          : "bg-orange-100 border-orange-400"
+                        : "hover:border-gray-400"
+                    }`}
+                    onClick={() => handleLearningTypeChange(type.id)}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      {type.icon}
+                      <span className="font-medium">{type.title}</span>
+                    </div>
+                    <p className="text-sm text-gray-600">{type.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

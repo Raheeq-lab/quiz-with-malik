@@ -14,7 +14,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ teacherName, onLogout
       <div className="container mx-auto py-4 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="bg-white text-quiz-purple font-bold rounded-lg p-2">M</div>
-          <span className="font-bold text-xl">Math with Malik</span>
+          <span className="font-bold text-xl">Malik's Learning Lab</span>
         </div>
         
         <div className="flex items-center gap-4">
