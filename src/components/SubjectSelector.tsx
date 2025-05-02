@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { BookOpen, BookText, Laptop } from "lucide-react";
+import { BookOpen, BookText, Laptop, PuzzlePiece, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, FileText, Pen, Image, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp } from "lucide-react";
 
 interface SubjectSelectorProps {
   selectedSubject: string;
