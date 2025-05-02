@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PuzzlePiece, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, FileText, Pen, Image, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp } from "lucide-react";
+import { Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, FileText, Pen, Image, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp } from "lucide-react";
 
 interface LearningType {
   id: string;
@@ -39,7 +39,7 @@ const LearningTypeCards: React.FC<LearningTypeCardsProps> = ({ subject }) => {
         id: "problem-solving",
         title: "Problem Solving Practice",
         description: "Solve step-by-step math problems to build logic and accuracy.",
-        icon: <PuzzlePiece className={getIconColor()} />
+        icon: <Brain className={getIconColor()} />
       },
       {
         id: "visual-interactive",
