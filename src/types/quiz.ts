@@ -111,7 +111,7 @@ export interface LessonPhaseContent {
 
 // Activity settings interface
 export interface ActivitySettings {
-  activityType: "teacher-led" | "print-practice" | "student-devices";
+  activityType: "teacher-led" | "print-practice" | "student-devices" | "game";
   teamMode: {
     enabled: boolean;
     numberOfTeams?: number;
@@ -120,6 +120,13 @@ export interface ActivitySettings {
   scoring: {
     enabled: boolean;
     type?: "points" | "badges";
+  };
+  gameTitle?: string;
+  gameQuestions?: GameQuestion[];
+  gameSettings?: {
+    randomizeQuestions?: boolean;
+    timerEnabled?: boolean;
+    timerDuration?: number;
   };
 }
 
@@ -130,4 +137,16 @@ export interface TeamInfo {
   color: string;
   emoji: string;
   score?: number;
+}
+
+// Game question interface
+export interface GameQuestion {
+  id: string;
+  text: string;
+  type: "text" | "image" | "multiple-choice";
+  imageUrl?: string;
+  options?: string[];
+  correctOption?: number;
+  answer?: string;
+  points: number;
 }

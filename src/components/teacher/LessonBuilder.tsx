@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +10,9 @@ import {
   X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, 
   BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, 
   Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp, 
-  Video, ArrowLeft, Activity
+  Video, ArrowLeft, Activity, Timer, Star, Users, Gamepad
 } from "lucide-react";
-import { Lesson, LessonContent, ActivitySettings, TeamInfo } from '@/types/quiz';
+import { Lesson, LessonContent, ActivitySettings, TeamInfo, GameQuestion } from '@/types/quiz';
 import SubjectSelector from '@/components/SubjectSelector';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
@@ -61,6 +60,17 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   const [selectedLearningType, setSelectedLearningType] = useState<string>('');
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const videoInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // New game activity state
+  const [gameQuestions, setGameQuestions] = useState<{
+    id: string;
+    text: string;
+    imageUrl?: string;
+    options?: string[];
+    correctOption?: number;
+    points: number;
+    type: 'text' | 'image' | 'multiple-choice';
+  }[]>([]);
 
   // Define learning types based on selected subject
   const getLearningTypes = (): LearningTypeOption[] => {
@@ -204,19 +214,82 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   };
   
   // Add the handler functions for activity settings
-  const handleActivityTypeChange = (index: number, activityType: "teacher-led" | "print-practice" | "student-devices") => {
+  const handleActivityTypeChange = (index: number, activityType: "teacher-led" | "print-practice" | "student-devices" | "game") => {
     setContentBlocks(prev => prev.map((block, i) => {
       if (i !== index || block.type !== 'activity') return block;
+      
+      let updatedActivity = {
+        ...(block.activity || { 
+          activityType: "teacher-led", 
+          teamMode: { enabled: false }, 
+          scoring: { enabled: false } 
+        }),
+        activityType
+      };
+      
+      // Initialize game-specific settings if switching to game activity
+      if (activityType === "game") {
+        updatedActivity = {
+          ...updatedActivity,
+          gameTitle: "Fun Quiz Game",
+          gameQuestions: [
+            {
+              id: `question-${Date.now()}-0`,
+              text: '',
+              points: 10,
+              type: 'text'
+            },
+            {
+              id: `question-${Date.now()}-1`,
+              text: '',
+              points: 10,
+              type: 'text'
+            },
+            {
+              id: `question-${Date.now()}-2`,
+              text: '',
+              points: 20,
+              type: 'text'
+            },
+            {
+              id: `question-${Date.now()}-3`,
+              text: '',
+              points: 20,
+              type: 'text'
+            }
+          ],
+          gameSettings: {
+            randomizeQuestions: true,
+            timerEnabled: false,
+            timerDuration: 30
+          },
+          // Ensure team mode is enabled for games
+          teamMode: {
+            enabled: true,
+            numberOfTeams: 2,
+            teams: [
+              {
+                id: `team-${Date.now()}-0`,
+                name: "Team 1",
+                color: COLOR_OPTIONS[0],
+                emoji: EMOJI_OPTIONS[0],
+                score: 0
+              },
+              {
+                id: `team-${Date.now()}-1`,
+                name: "Team 2",
+                color: COLOR_OPTIONS[1],
+                emoji: EMOJI_OPTIONS[1],
+                score: 0
+              }
+            ]
+          }
+        };
+      }
+      
       return {
         ...block,
-        activity: {
-          ...(block.activity || { 
-            activityType: "teacher-led", 
-            teamMode: { enabled: false }, 
-            scoring: { enabled: false } 
-          }),
-          activityType
-        }
+        activity: updatedActivity
       };
     }));
   };
@@ -403,6 +476,206 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
         }
       };
     }));
+  };
+
+  // New Game Activity handlers
+  const handleAddGameQuestion = (index: number) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      // Get current questions from block or initialize
+      const currentQuestions = block.activity?.gameQuestions || [];
+      
+      // Add new question
+      const newQuestion = {
+        id: `question-${Date.now()}-${currentQuestions.length}`,
+        text: '',
+        points: 10,
+        type: 'text' as const
+      };
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameQuestions: [...currentQuestions, newQuestion]
+        }
+      };
+    }));
+  };
+  
+  const handleRemoveGameQuestion = (contentIndex: number, questionIndex: number) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== contentIndex || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      const updatedQuestions = (block.activity?.gameQuestions || []).filter((_, qIndex) => qIndex !== questionIndex);
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameQuestions: updatedQuestions
+        }
+      };
+    }));
+  };
+  
+  const handleGameQuestionChange = (contentIndex: number, questionIndex: number, field: string, value: any) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== contentIndex || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      const updatedQuestions = (block.activity?.gameQuestions || []).map((question, qIndex) => {
+        if (qIndex !== questionIndex) return question;
+        return { ...question, [field]: value };
+      });
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameQuestions: updatedQuestions
+        }
+      };
+    }));
+  };
+  
+  const handleGameQuestionTypeChange = (contentIndex: number, questionIndex: number, type: 'text' | 'image' | 'multiple-choice') => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== contentIndex || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      const updatedQuestions = (block.activity?.gameQuestions || []).map((question, qIndex) => {
+        if (qIndex !== questionIndex) return question;
+        
+        // Initialize options array if changing to multiple choice
+        const options = type === 'multiple-choice' ? 
+          question.options || ['', '', '', ''] : 
+          question.options;
+        
+        return { 
+          ...question, 
+          type,
+          options
+        };
+      });
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameQuestions: updatedQuestions
+        }
+      };
+    }));
+  };
+  
+  const handleGameQuestionOptionChange = (contentIndex: number, questionIndex: number, optionIndex: number, value: string) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== contentIndex || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      const updatedQuestions = (block.activity?.gameQuestions || []).map((question, qIndex) => {
+        if (qIndex !== questionIndex) return question;
+        
+        const options = [...(question.options || [])];
+        options[optionIndex] = value;
+        
+        return { ...question, options };
+      });
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameQuestions: updatedQuestions
+        }
+      };
+    }));
+  };
+  
+  const handleGameQuestionCorrectOptionChange = (contentIndex: number, questionIndex: number, correctOption: number) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== contentIndex || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      const updatedQuestions = (block.activity?.gameQuestions || []).map((question, qIndex) => {
+        if (qIndex !== questionIndex) return question;
+        
+        return { ...question, correctOption };
+      });
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameQuestions: updatedQuestions
+        }
+      };
+    }));
+  };
+  
+  const handleGameTimerToggle = (index: number, enabled: boolean) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameSettings: {
+            ...(block.activity.gameSettings || {}),
+            timerEnabled: enabled
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleGameTimerDurationChange = (index: number, duration: number) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameSettings: {
+            ...(block.activity.gameSettings || {}),
+            timerDuration: duration
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleGameQuestionImageUpload = (contentIndex: number, questionIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image size should be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Only image files are allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Convert image to base64
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      handleGameQuestionChange(contentIndex, questionIndex, 'imageUrl', base64);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle learning type selection
@@ -663,517 +936,4 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }
   };
 
-  const renderContentBlock = (block: LessonContent, index: number) => {
-    switch (block.type) {
-      case 'text':
-        return (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label>Text Content</Label>
-              <Button
-                type="button"
-                onClick={() => handleRemoveContent(index)}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-red-500"
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-            <Textarea
-              value={block.content}
-              onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-              placeholder="Enter text content here..."
-              rows={4}
-            />
-          </div>
-        );
-      
-      case 'image':
-        return (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label>Image</Label>
-              <Button
-                type="button"
-                onClick={() => handleRemoveContent(index)}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-red-500"
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-            {block.imageUrl ? (
-              <div className="relative mb-2">
-                <img 
-                  src={block.imageUrl} 
-                  alt={`Image for block ${index + 1}`}
-                  className="max-h-60 rounded-md border border-gray-200"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  className="absolute top-1 right-1 h-8 w-8 p-1 rounded-full"
-                  onClick={() => removeImage(index)}
-                >
-                  <X size={16} />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(index, e)}
-                  ref={(el) => {
-                    if (fileInputRefs.current.length <= index) {
-                      fileInputRefs.current = [...fileInputRefs.current, el];
-                    } else {
-                      fileInputRefs.current[index] = el;
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => fileInputRefs.current[index]?.click()}
-                >
-                  <Upload size={16} />
-                  Upload Image
-                </Button>
-                <span className="text-sm text-gray-500">Max size: 5MB</span>
-              </div>
-            )}
-            <div>
-              <Label>Caption (Optional)</Label>
-              <Input
-                value={block.content || ''}
-                onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                placeholder="Image caption or description"
-              />
-            </div>
-          </div>
-        );
-
-      case 'video':
-        return (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label>Video</Label>
-              <Button
-                type="button"
-                onClick={() => handleRemoveContent(index)}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-red-500"
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-            {block.videoUrl ? (
-              <div className="relative mb-2">
-                <video 
-                  src={block.videoUrl}
-                  controls
-                  className="w-full max-h-80 rounded-md border border-gray-200"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  className="absolute top-1 right-1 h-8 w-8 p-1 rounded-full"
-                  onClick={() => removeVideo(index)}
-                >
-                  <X size={16} />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="video/mp4,video/quicktime,video/webm"
-                  onChange={(e) => handleVideoUpload(index, e)}
-                  ref={(el) => {
-                    if (videoInputRefs.current.length <= index) {
-                      videoInputRefs.current = [...videoInputRefs.current, el];
-                    } else {
-                      videoInputRefs.current[index] = el;
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => videoInputRefs.current[index]?.click()}
-                >
-                  <Upload size={16} />
-                  Upload Video (MP4)
-                </Button>
-                <span className="text-sm text-gray-500">Max size: 50MB</span>
-              </div>
-            )}
-            <div>
-              <Label>Title (Optional)</Label>
-              <Input
-                value={block.content || ''}
-                onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                placeholder="Video title or description"
-              />
-            </div>
-          </div>
-        );
-      
-      case 'activity':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <Label>Activity Content</Label>
-              <Button
-                type="button"
-                onClick={() => handleRemoveContent(index)}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-red-500"
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              <Label>Activity Title</Label>
-              <Input
-                value={block.content || ''}
-                onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                placeholder="Enter title for this activity"
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <Label>Activity Type (Required)</Label>
-              <RadioGroup 
-                value={block.activity?.activityType || 'teacher-led'} 
-                onValueChange={(value) => handleActivityTypeChange(index, value as any)}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4"
-              >
-                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
-                  block.activity?.activityType === "teacher-led" ? "border-blue-500 bg-blue-50" : ""
-                }`}>
-                  <RadioGroupItem value="teacher-led" id={`teacher-led-${index}`} />
-                  <Label htmlFor={`teacher-led-${index}`} className="flex items-center cursor-pointer">
-                    <span className="text-2xl mr-2">👨‍🏫</span> 
-                    <div>
-                      <div>Teacher-Led</div>
-                      <div className="text-xs text-gray-500">Activity shown on teacher's screen</div>
-                    </div>
-                  </Label>
-                </div>
-                
-                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
-                  block.activity?.activityType === "print-practice" ? "border-blue-500 bg-blue-50" : ""
-                }`}>
-                  <RadioGroupItem value="print-practice" id={`print-practice-${index}`} />
-                  <Label htmlFor={`print-practice-${index}`} className="flex items-center cursor-pointer">
-                    <span className="text-2xl mr-2">📝</span>
-                    <div>
-                      <div>Print & Practice</div>
-                      <div className="text-xs text-gray-500">Activity done on paper or worksheets</div>
-                    </div>
-                  </Label>
-                </div>
-                
-                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
-                  block.activity?.activityType === "student-devices" ? "border-blue-500 bg-blue-50" : ""
-                }`}>
-                  <RadioGroupItem value="student-devices" id={`student-devices-${index}`} />
-                  <Label htmlFor={`student-devices-${index}`} className="flex items-center cursor-pointer">
-                    <span className="text-2xl mr-2">💻</span>
-                    <div>
-                      <div>Student Devices</div>
-                      <div className="text-xs text-gray-500">Activity completed on student laptops/tablets</div>
-                    </div>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            <div className="space-y-4 border-t pt-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`team-mode-${index}`} className="flex items-center gap-2">
-                  <span className="text-xl">👥</span> Enable Team Mode
-                </Label>
-                <Switch 
-                  id={`team-mode-${index}`}
-                  checked={block.activity?.teamMode?.enabled || false}
-                  onCheckedChange={(checked) => handleTeamModeToggle(index, checked)}
-                />
-              </div>
-              
-              {block.activity?.teamMode?.enabled && (
-                <div className="space-y-4 pl-4 pt-2 border-l-2 border-blue-200">
-                  <div className="space-y-2">
-                    <Label>Number of Teams</Label>
-                    <div className="flex items-center gap-2">
-                      <Input 
-                        type="number"
-                        min={2}
-                        max={6}
-                        value={block.activity.teamMode.numberOfTeams || 3}
-                        onChange={(e) => handleNumberOfTeamsChange(index, parseInt(e.target.value))}
-                        className="w-20"
-                      />
-                      <span className="text-sm text-gray-500">(2-6 teams)</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <Label>Team Setup</Label>
-                    {block.activity.teamMode.teams?.map((team, teamIndex) => (
-                      <div key={team.id} className="flex flex-wrap items-center gap-2 p-2 border rounded-md">
-                        <div className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${team.color}`}>
-                          {team.emoji}
-                        </div>
-                        <Input
-                          value={team.name}
-                          onChange={(e) => handleTeamNameChange(index, teamIndex, e.target.value)}
-                          className="flex-1 min-w-[120px]"
-                          placeholder="Team name"
-                        />
-                        <select
-                          value={team.emoji}
-                          onChange={(e) => handleTeamEmojiChange(index, teamIndex, e.target.value)}
-                          className="p-1 border rounded-md"
-                        >
-                          {EMOJI_OPTIONS.map(emoji => (
-                            <option key={emoji} value={emoji}>{emoji}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={team.color}
-                          onChange={(e) => handleTeamColorChange(index, teamIndex, e.target.value)}
-                          className="p-1 border rounded-md"
-                        >
-                          {COLOR_OPTIONS.map(color => (
-                            <option key={color} value={color}>
-                              {color.replace('bg-', '').replace('-500', '')}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between border-t pt-4">
-                <Label htmlFor={`scoring-${index}`} className="flex items-center gap-2">
-                  <span className="text-xl">🏆</span> Enable Scoring
-                </Label>
-                <Switch 
-                  id={`scoring-${index}`}
-                  checked={block.activity?.scoring?.enabled || false}
-                  onCheckedChange={(checked) => handleScoringToggle(index, checked)}
-                />
-              </div>
-              
-              {block.activity?.scoring?.enabled && (
-                <div className="space-y-2 pl-4 pt-2 border-l-2 border-blue-200">
-                  <Label>Scoring Type</Label>
-                  <RadioGroup 
-                    value={block.activity.scoring.type || "points"}
-                    onValueChange={(value) => handleScoringTypeChange(index, value as "points" | "badges")}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="points" id={`points-${index}`} />
-                      <Label htmlFor={`points-${index}`}>Points</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="badges" id={`badges-${index}`} />
-                      <Label htmlFor={`badges-${index}`}>Badges</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-  
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold flex items-center gap-2">
-          {subject === "math" && <BookOpen className="text-purple-500" />}
-          {subject === "english" && <BookText className="text-green-500" />}
-          {subject === "ict" && <Laptop className="text-orange-500" />}
-          Create New Lesson
-        </h2>
-        <Button
-          variant="ghost"
-          onClick={onCancel}
-          className="flex items-center gap-1"
-        >
-          <ArrowLeft size={16} />
-          Back
-        </Button>
-      </div>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lesson Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Lesson Title</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter a clear, descriptive title..."
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description (Optional)</Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Briefly describe what students will learn..."
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Learning Type</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getLearningTypes().map((type) => (
-                  <div
-                    key={type.id}
-                    onClick={() => handleLearningTypeChange(type.id)}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                      selectedLearningType === type.id
-                        ? getSubjectColorClass()
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {type.icon}
-                      <h3 className="font-medium">{type.title}</h3>
-                    </div>
-                    <p className="text-sm mt-1 text-gray-600">{type.description}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Lesson Content</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {contentBlocks.map((block, index) => (
-                <div
-                  key={block.id}
-                  className="border rounded-lg p-4 relative"
-                >
-                  {renderContentBlock(block, index)}
-                </div>
-              ))}
-
-              <div className="mt-4">
-                <Label>Add Content Block</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex items-center justify-center gap-1 h-auto py-2"
-                    onClick={() => handleAddContent('text')}
-                  >
-                    <FileText size={16} />
-                    <span>Text</span>
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex items-center justify-center gap-1 h-auto py-2"
-                    onClick={() => handleAddContent('image')}
-                  >
-                    <Image size={16} />
-                    <span>Image</span>
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex items-center justify-center gap-1 h-auto py-2"
-                    onClick={() => handleAddContent('video')}
-                  >
-                    <Video size={16} />
-                    <span>Video</span>
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex items-center justify-center gap-1 h-auto py-2"
-                    onClick={() => handleAddContent('activity')}
-                  >
-                    <Activity size={16} />
-                    <span>Activity</span>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="flex justify-end gap-2 mt-8">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit"
-            className={
-              subject === "math" 
-                ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                : subject === "english" 
-                  ? "bg-green-600 hover:bg-green-700 text-white" 
-                  : "bg-orange-600 hover:bg-orange-700 text-white"
-            }
-          >
-            Create Lesson
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default LessonBuilder;
+  const renderContentBlock = (block: LessonContent, index
