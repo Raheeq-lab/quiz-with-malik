@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -449,14 +448,14 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
             <div className="pt-2">
               <Label>AI Tool Assistance (optional)</Label>
               <Select 
-                value={content.aiToolUsed || ""}
+                value={content.aiToolUsed || "none"}
                 onValueChange={(value) => handleContentChange(phase, content.id, "aiToolUsed", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select an AI tool to help" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No AI tool</SelectItem>
+                  <SelectItem value="none">No AI tool</SelectItem>
                   {aiTools.map(tool => (
                     <SelectItem key={tool} value={tool}>{tool}</SelectItem>
                   ))}
