@@ -6,9 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp, Video } from "lucide-react";
-import { Lesson, LessonContent } from '@/types/quiz';
+import { 
+  X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, 
+  BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, 
+  Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp, 
+  Video, ArrowLeft, Activity
+} from "lucide-react";
+import { Lesson, LessonContent, ActivitySettings, TeamInfo } from '@/types/quiz';
 import SubjectSelector from '@/components/SubjectSelector';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 
 interface LearningTypeOption {
   id: string;
@@ -38,6 +45,12 @@ const initialContent: LessonContent = {
   type: 'text',
   content: '',
 };
+
+const EMOJI_OPTIONS = ["😀", "🚀", "🔥", "⭐", "🎯", "🎮", "🏆", "🎨", "🎭", "🎪", "🎢", "🎡"];
+const COLOR_OPTIONS = [
+  "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", 
+  "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-orange-500"
+];
 
 const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel, subject = "math" }) => {
   const { toast } = useToast();
@@ -198,14 +211,30 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       setContentBlocks(getSuggestedContentBlocks(typeId));
     }
   };
-
+  
   const handleAddContent = (type: LessonContent['type']) => {
-    setContentBlocks(prev => [...prev, {
-      id: `content-${Date.now()}-${prev.length}`,
+    let newContent: LessonContent = {
+      id: `content-${Date.now()}-${contentBlocks.length}`,
       type,
       content: '',
-      options: type === 'imageWithPrompt' || type === 'dragAndDrop' ? [''] : undefined,
-    }]);
+    };
+
+    if (type === 'activity') {
+      // Initialize activity settings for activity content type
+      newContent.activity = {
+        activityType: "teacher-led",
+        teamMode: {
+          enabled: false
+        },
+        scoring: {
+          enabled: false
+        }
+      };
+    } else if (type === 'imageWithPrompt' || type === 'dragAndDrop') {
+      newContent.options = [''];
+    }
+
+    setContentBlocks(prev => [...prev, newContent]);
   };
   
   const handleRemoveContent = (index: number) => {
@@ -564,6 +593,206 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
           </div>
         );
       
+      case 'activity':
+        return (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <Label>Activity Title</Label>
+              <Input
+                value={block.content || ''}
+                onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+                placeholder="Enter title for this activity"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <Label>Activity Type (Required)</Label>
+              <RadioGroup 
+                value={block.activity?.activityType || 'teacher-led'} 
+                onValueChange={(value) => handleActivityTypeChange(index, value as any)}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4"
+              >
+                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  block.activity?.activityType === "teacher-led" ? "border-blue-500 bg-blue-50" : ""
+                }`}>
+                  <RadioGroupItem value="teacher-led" id={`teacher-led-${index}`} />
+                  <Label htmlFor={`teacher-led-${index}`} className="flex items-center cursor-pointer">
+                    <span className="text-2xl mr-2">👨‍🏫</span> 
+                    <div>
+                      <div>Teacher-Led</div>
+                      <div className="text-xs text-gray-500">Activity shown on teacher's screen</div>
+                    </div>
+                  </Label>
+                </div>
+                
+                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  block.activity?.activityType === "print-practice" ? "border-blue-500 bg-blue-50" : ""
+                }`}>
+                  <RadioGroupItem value="print-practice" id={`print-practice-${index}`} />
+                  <Label htmlFor={`print-practice-${index}`} className="flex items-center cursor-pointer">
+                    <span className="text-2xl mr-2">📝</span>
+                    <div>
+                      <div>Print & Practice</div>
+                      <div className="text-xs text-gray-500">Activity done on paper or worksheets</div>
+                    </div>
+                  </Label>
+                </div>
+                
+                <div className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  block.activity?.activityType === "student-devices" ? "border-blue-500 bg-blue-50" : ""
+                }`}>
+                  <RadioGroupItem value="student-devices" id={`student-devices-${index}`} />
+                  <Label htmlFor={`student-devices-${index}`} className="flex items-center cursor-pointer">
+                    <span className="text-2xl mr-2">💻</span>
+                    <div>
+                      <div>Student Devices</div>
+                      <div className="text-xs text-gray-500">Activity completed on student laptops/tablets</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`team-mode-${index}`} className="flex items-center gap-2">
+                  <span className="text-xl">👥</span> Enable Team Mode
+                </Label>
+                <Switch 
+                  id={`team-mode-${index}`}
+                  checked={block.activity?.teamMode?.enabled || false}
+                  onCheckedChange={(checked) => handleTeamModeToggle(index, checked)}
+                />
+              </div>
+              
+              {block.activity?.teamMode?.enabled && (
+                <div className="space-y-4 pl-4 pt-2 border-l-2 border-blue-200">
+                  <div className="space-y-2">
+                    <Label>Number of Teams</Label>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        type="number"
+                        min={2}
+                        max={6}
+                        value={block.activity.teamMode.numberOfTeams || 3}
+                        onChange={(e) => handleNumberOfTeamsChange(index, parseInt(e.target.value))}
+                        className="w-20"
+                      />
+                      <span className="text-sm text-gray-500">(2-6 teams)</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <Label>Team Setup</Label>
+                    {block.activity.teamMode.teams?.map((team, teamIndex) => (
+                      <div key={team.id} className="flex flex-wrap items-center gap-2 p-2 border rounded-md">
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${team.color}`}>
+                          {team.emoji}
+                        </div>
+                        <Input
+                          value={team.name}
+                          onChange={(e) => handleTeamNameChange(index, teamIndex, e.target.value)}
+                          placeholder={`Team ${teamIndex + 1}`}
+                          className="flex-1 min-w-[120px]"
+                        />
+                        <div className="flex gap-1">
+                          <select 
+                            value={team.emoji} 
+                            onChange={(e) => handleTeamEmojiChange(index, teamIndex, e.target.value)}
+                            className="w-12 h-9 rounded-md border border-input bg-background px-2"
+                          >
+                            {EMOJI_OPTIONS.map(emoji => (
+                              <option key={emoji} value={emoji}>{emoji}</option>
+                            ))}
+                          </select>
+                          <select 
+                            value={team.color} 
+                            onChange={(e) => handleTeamColorChange(index, teamIndex, e.target.value)}
+                            className="w-12 h-9 rounded-md border border-input bg-background px-2"
+                          >
+                            {COLOR_OPTIONS.map(color => (
+                              <option key={color} value={color}>
+                                {color.replace("bg-", "").replace("-500", "")}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor={`scoring-${index}`} className="flex items-center gap-2">
+                  <span className="text-xl">🏆</span> Enable Scoring
+                </Label>
+                <Switch 
+                  id={`scoring-${index}`}
+                  checked={block.activity?.scoring?.enabled || false}
+                  onCheckedChange={(checked) => handleScoringToggle(index, checked)}
+                />
+              </div>
+              
+              {block.activity?.scoring?.enabled && (
+                <div className="space-y-4 pl-4 pt-2 border-l-2 border-blue-200">
+                  <RadioGroup 
+                    value={block.activity.scoring.type || "points"} 
+                    onValueChange={(value) => handleScoringTypeChange(index, value as any)}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="points" id={`points-${index}`} />
+                      <Label htmlFor={`points-${index}`}>Points</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="badges" id={`badges-${index}`} />
+                      <Label htmlFor={`badges-${index}`}>Badges</Label>
+                    </div>
+                  </RadioGroup>
+                  
+                  <div className="border rounded-md p-3 bg-gray-50">
+                    <h4 className="text-sm font-medium mb-2">Preview</h4>
+                    {block.activity.scoring.type === "points" ? (
+                      <div className="flex gap-4">
+                        {block.activity.teamMode?.enabled && block.activity.teamMode.teams?.slice(0, 3).map(team => (
+                          <div key={team.id} className="text-center">
+                            <div className={`w-10 h-10 flex items-center justify-center rounded-full text-white ${team.color} mx-auto`}>
+                              {team.emoji}
+                            </div>
+                            <div className="text-xs mt-1">{team.name}</div>
+                            <div className="text-md font-bold">0 pts</div>
+                          </div>
+                        ))}
+                        {!block.activity.teamMode?.enabled && (
+                          <div className="text-sm">Individual student points will be tracked</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl">🥇</div>
+                          <div className="text-xs">First Place</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl">🌟</div>
+                          <div className="text-xs">Star Badge</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl">🏆</div>
+                          <div className="text-xs">Trophy</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      
       case 'imageWithPrompt':
         return (
           <div className="space-y-4">
@@ -778,11 +1007,20 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           {getSubjectIcon()}
           <span>Create New {subject.charAt(0).toUpperCase() + subject.slice(1)} Lesson</span>
         </CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+          className="flex items-center gap-1"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </Button>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">

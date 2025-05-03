@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import AccessCodeCard from '@/components/AccessCodeCard';
 import { Quiz } from '@/types/quiz';
-import { Book, BookOpen, BookText, Laptop } from 'lucide-react';
+import { Book, BookOpen, BookText, Laptop, ArrowLeft } from 'lucide-react';
 
 interface QuizzesTabProps {
   quizzes: Quiz[];
@@ -38,12 +38,22 @@ const QuizzesTab: React.FC<QuizzesTabProps> = ({ quizzes, onCreateQuiz, onCopyCo
           {getSubjectIcon()}
           <span>My {subject.charAt(0).toUpperCase() + subject.slice(1)} Quizzes</span>
         </h2>
-        <Button 
-          onClick={onCreateQuiz}
-          className={`text-white ${getSubjectColor()}`}
-        >
-          Create New Quiz
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => window.history.back()}
+            className="flex items-center gap-1"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </Button>
+          <Button 
+            onClick={onCreateQuiz}
+            className={`text-white ${getSubjectColor()}`}
+          >
+            Create New Quiz
+          </Button>
+        </div>
       </div>
       
       {quizzes.length === 0 ? (

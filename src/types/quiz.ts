@@ -59,41 +59,18 @@ export interface Lesson {
   accessCode: string;
   learningType: string; // Added learningType property
   lessonStructure?: LessonStructure; // Added new lesson structure
-  activity?: ActivitySettings; // Added activity settings
-}
-
-// New interface for activity settings
-export interface ActivitySettings {
-  activityType: "teacher-led" | "print-practice" | "student-devices";
-  teamMode: {
-    enabled: boolean;
-    numberOfTeams?: number;
-    teams?: TeamInfo[];
-  };
-  scoring: {
-    enabled: boolean;
-    type?: "points" | "badges";
-  };
-}
-
-// Team information interface
-export interface TeamInfo {
-  id: string;
-  name: string;
-  color: string;
-  emoji: string;
-  score?: number;
 }
 
 export interface LessonContent {
   id: string;
-  type: "text" | "image" | "imageWithPrompt" | "dragAndDrop" | "labeling" | "video"; // Added video type
+  type: "text" | "image" | "imageWithPrompt" | "dragAndDrop" | "labeling" | "video" | "activity"; // Added activity type
   content: string;
   imageUrl?: string;
   videoUrl?: string; // Added for video content
   prompt?: string;
   options?: string[];
   solution?: string | string[];
+  activity?: ActivitySettings; // Activity settings for the content block
 }
 
 export interface TeacherData {
@@ -128,4 +105,28 @@ export interface LessonPhaseContent {
   quizQuestions?: QuizQuestion[];
   resourceUrl?: string;
   aiToolUsed?: string;
+  activity?: ActivitySettings; // Added activity settings to lesson phase content
+}
+
+// Activity settings interface
+export interface ActivitySettings {
+  activityType: "teacher-led" | "print-practice" | "student-devices";
+  teamMode: {
+    enabled: boolean;
+    numberOfTeams?: number;
+    teams?: TeamInfo[];
+  };
+  scoring: {
+    enabled: boolean;
+    type?: "points" | "badges";
+  };
+}
+
+// Team information interface
+export interface TeamInfo {
+  id: string;
+  name: string;
+  color: string;
+  emoji: string;
+  score?: number;
 }

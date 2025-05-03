@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,6 +37,9 @@ const TeacherDashboard: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState<"math" | "english" | "ict">("math");
   const [selectedGrades, setSelectedGrades] = useState<number[]>([]);
   
+  // Available grades are now 1-11 only
+  const availableGrades = Array.from({ length: 11 }, (_, i) => i + 1);
+  
   useEffect(() => {
     // Check if user is logged in
     const storedTeacher = localStorage.getItem('mathWithMalikTeacher');
@@ -49,7 +51,10 @@ const TeacherDashboard: React.FC = () => {
     
     const teacher = JSON.parse(storedTeacher);
     setTeacherData(teacher);
-    setSelectedGrades(teacher.grades || []);
+    
+    // Filter grades to only include 1-11
+    const filteredGrades = (teacher.grades || []).filter(g => g >= 1 && g <= 11);
+    setSelectedGrades(filteredGrades);
     
     // Load quizzes
     const storedQuizzes = localStorage.getItem('mathWithMalikQuizzes');
@@ -162,6 +167,8 @@ const TeacherDashboard: React.FC = () => {
               selectedGrades={selectedGrades}
               onChange={setSelectedGrades}
               subject={selectedSubject}
+              // Only allow grades 1-11
+              availableGrades={availableGrades}
             />
           </div>
         </div>
