@@ -202,7 +202,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }
   };
   
-  // Add the missing handler functions for activity settings
+  // Add the handler functions for activity settings
   const handleActivityTypeChange = (index: number, activityType: "teacher-led" | "print-practice" | "student-devices") => {
     setContentBlocks(prev => prev.map((block, i) => {
       if (i !== index || block.type !== 'activity') return block;
@@ -891,4 +891,265 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                         <div className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${team.color}`}>
                           {team.emoji}
                         </div>
-                        <
+                        <Input
+                          value={team.name}
+                          onChange={(e) => handleTeamNameChange(index, teamIndex, e.target.value)}
+                          className="flex-1 min-w-[120px]"
+                          placeholder="Team name"
+                        />
+                        <select
+                          value={team.emoji}
+                          onChange={(e) => handleTeamEmojiChange(index, teamIndex, e.target.value)}
+                          className="p-1 border rounded-md"
+                        >
+                          {EMOJI_OPTIONS.map(emoji => (
+                            <option key={emoji} value={emoji}>{emoji}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={team.color}
+                          onChange={(e) => handleTeamColorChange(index, teamIndex, e.target.value)}
+                          className="p-1 border rounded-md"
+                        >
+                          {COLOR_OPTIONS.map(color => (
+                            <option key={color} value={color}>
+                              {color.replace('bg-', '').replace('-500', '')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center justify-between border-t pt-4">
+                <Label htmlFor={`scoring-${index}`} className="flex items-center gap-2">
+                  <span className="text-xl">🏆</span> Enable Scoring
+                </Label>
+                <Switch 
+                  id={`scoring-${index}`}
+                  checked={block.activity?.scoring?.enabled || false}
+                  onCheckedChange={(checked) => handleScoringToggle(index, checked)}
+                />
+              </div>
+              
+              {block.activity?.scoring?.enabled && (
+                <div className="space-y-2 pl-4 pt-2 border-l-2 border-blue-200">
+                  <Label>Scoring Type</Label>
+                  <RadioGroup 
+                    value={block.activity.scoring.type || "points"}
+                    onValueChange={(value) => handleScoringTypeChange(index, value as "points" | "badges")}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="points" id={`points-${index}`} />
+                      <Label htmlFor={`points-${index}`}>Points</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="badges" id={`badges-${index}`} />
+                      <Label htmlFor={`badges-${index}`}>Badges</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+  
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold flex items-center gap-2">
+          {subject === "math" && <BookOpen className="text-purple-500" />}
+          {subject === "english" && <BookText className="text-green-500" />}
+          {subject === "ict" && <Laptop className="text-orange-500" />}
+          Create New Lesson
+        </h2>
+        <Button
+          variant="ghost"
+          onClick={onCancel}
+          className="flex items-center gap-1"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </Button>
+      </div>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lesson Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Lesson Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter a clear, descriptive title..."
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Briefly describe what students will learn..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Learning Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getLearningTypes().map((type) => (
+                  <div
+                    key={type.id}
+                    onClick={() => handleLearningTypeChange(type.id)}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedLearningType === type.id
+                        ? getSubjectColorClass()
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {type.icon}
+                      <h3 className="font-medium">{type.title}</h3>
+                    </div>
+                    <p className="text-sm mt-1 text-gray-600">{type.description}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Lesson Content</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {contentBlocks.map((block, index) => (
+                <div
+                  key={block.id}
+                  className="border rounded-lg p-4 relative"
+                >
+                  <div className="absolute top-2 right-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 w-8 p-0 rounded-full"
+                      onClick={() => handleRemoveContent(index)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                  
+                  <div className="mb-4 pb-2 border-b">
+                    <div className="flex items-center gap-2">
+                      {block.type === 'text' && <FileText size={18} />}
+                      {block.type === 'image' && <Image size={18} />}
+                      {block.type === 'imageWithPrompt' && <Image size={18} />}
+                      {block.type === 'video' && <Video size={18} />}
+                      {block.type === 'activity' && <Activity size={18} />}
+                      <span className="font-medium capitalize">{block.type.replace(/([A-Z])/g, ' $1').trim()} Block</span>
+                    </div>
+                  </div>
+                  
+                  {renderContentBlock(block, index)}
+                </div>
+              ))}
+
+              <div className="mt-4">
+                <Label>Add Content Block</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex items-center justify-center gap-1 h-auto py-2"
+                    onClick={() => handleAddContent('text')}
+                  >
+                    <FileText size={16} />
+                    <span>Text</span>
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex items-center justify-center gap-1 h-auto py-2"
+                    onClick={() => handleAddContent('image')}
+                  >
+                    <Image size={16} />
+                    <span>Image</span>
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex items-center justify-center gap-1 h-auto py-2"
+                    onClick={() => handleAddContent('video')}
+                  >
+                    <Video size={16} />
+                    <span>Video</span>
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex items-center justify-center gap-1 h-auto py-2"
+                    onClick={() => handleAddContent('activity')}
+                  >
+                    <Activity size={16} />
+                    <span>Activity</span>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="flex justify-end gap-2 mt-8">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            className={
+              subject === "math" 
+                ? "bg-purple-600 hover:bg-purple-700 text-white" 
+                : subject === "english" 
+                  ? "bg-green-600 hover:bg-green-700 text-white" 
+                  : "bg-orange-600 hover:bg-orange-700 text-white"
+            }
+          >
+            Create Lesson
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default LessonBuilder;
