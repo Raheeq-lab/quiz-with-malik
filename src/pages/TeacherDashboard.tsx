@@ -7,6 +7,7 @@ import { Book, FileText, Users, BarChart, Laptop, BookText, Lightbulb } from "lu
 import { Quiz, Lesson, StudentQuizResult, TeacherData } from '@/types/quiz';
 import QuizForm from '@/components/QuizForm';
 import LessonBuilder from '@/components/teacher/LessonBuilder';
+import ScaffoldedLessonBuilder from '@/components/teacher/ScaffoldedLessonBuilder';
 import DashboardHeader from '@/components/teacher/DashboardHeader';
 import DashboardFooter from '@/components/teacher/DashboardFooter';
 import QuizzesTab from '@/components/teacher/tabs/QuizzesTab';
@@ -32,6 +33,7 @@ const TeacherDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showQuizForm, setShowQuizForm] = useState(false);
   const [showLessonBuilder, setShowLessonBuilder] = useState(false);
+  const [showScaffoldedLessonBuilder, setShowScaffoldedLessonBuilder] = useState(false);
   const [results, setResults] = useState<StudentQuizResult[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<"math" | "english" | "ict">("math");
   const [selectedGrades, setSelectedGrades] = useState<number[]>([]);
@@ -92,6 +94,7 @@ const TeacherDashboard: React.FC = () => {
     setLessons(updatedLessons);
     localStorage.setItem('mathWithMalikLessons', JSON.stringify(updatedLessons));
     setShowLessonBuilder(false);
+    setShowScaffoldedLessonBuilder(false);
     
     toast({
       title: "Lesson created!",
@@ -105,6 +108,7 @@ const TeacherDashboard: React.FC = () => {
 
   const handleCancelLessonBuilder = () => {
     setShowLessonBuilder(false);
+    setShowScaffoldedLessonBuilder(false);
   };
   
   const handleCopyCode = (title: string) => {
@@ -129,6 +133,12 @@ const TeacherDashboard: React.FC = () => {
 
   const filteredQuizzes = quizzes.filter(quiz => quiz.subject === selectedSubject);
   const filteredLessons = lessons.filter(lesson => lesson.subject === selectedSubject);
+
+  const handleCreateLessonClick = () => {
+    // Show a modal or dropdown here to choose between different lesson builder types
+    // For now, we'll just open the scaffolded lesson builder
+    setShowScaffoldedLessonBuilder(true);
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -156,7 +166,7 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
         
-        {!showQuizForm && !showLessonBuilder ? (
+        {!showQuizForm && !showLessonBuilder && !showScaffoldedLessonBuilder ? (
           <Tabs defaultValue="quizzes">
             <TabsList className="mb-8">
               <TabsTrigger value="quizzes" className="flex items-center gap-2">
@@ -193,7 +203,7 @@ const TeacherDashboard: React.FC = () => {
             <TabsContent value="lessons">
               <LessonsTab 
                 lessons={filteredLessons} 
-                onCreateLesson={() => setShowLessonBuilder(true)} 
+                onCreateLesson={handleCreateLessonClick} 
                 onCopyCode={handleCopyCode} 
                 subject={selectedSubject}
               />
@@ -226,6 +236,13 @@ const TeacherDashboard: React.FC = () => {
             grades={selectedGrades} 
             onSave={handleCreateQuiz}
             onCancel={handleCancelQuizForm}
+            subject={selectedSubject}
+          />
+        ) : showScaffoldedLessonBuilder ? (
+          <ScaffoldedLessonBuilder 
+            grades={selectedGrades} 
+            onSave={handleCreateLesson}
+            onCancel={handleCancelLessonBuilder}
             subject={selectedSubject}
           />
         ) : (

@@ -108,7 +108,8 @@ export default {
 				'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite'
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif']
+				sans: ['Inter', 'sans-serif'],
+				poppins: ['Poppins', 'sans-serif']
 			}
 		}
 	},

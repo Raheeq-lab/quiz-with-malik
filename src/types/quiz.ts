@@ -58,6 +58,7 @@ export interface Lesson {
   createdAt: string;
   accessCode: string;
   learningType: string; // Added learningType property
+  lessonStructure?: LessonStructure; // Added new lesson structure
 }
 
 export interface LessonContent {
@@ -78,4 +79,29 @@ export interface TeacherData {
   school?: string;
   grades: number[];
   subjects: ("math" | "english" | "ict")[];
+}
+
+export interface LessonStructure {
+  engage: LessonPhase;
+  model: LessonPhase;
+  guidedPractice: LessonPhase;
+  independentPractice: LessonPhase;
+  reflect: LessonPhase;
+}
+
+export interface LessonPhase {
+  title: string;
+  timeInMinutes: number;
+  content: LessonPhaseContent[];
+}
+
+export interface LessonPhaseContent {
+  id: string;
+  type: "text" | "image" | "video" | "quiz" | "activity" | "resource";
+  content: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  quizQuestions?: QuizQuestion[];
+  resourceUrl?: string;
+  aiToolUsed?: string;
 }
