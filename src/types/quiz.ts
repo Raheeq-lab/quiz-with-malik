@@ -59,6 +59,30 @@ export interface Lesson {
   accessCode: string;
   learningType: string; // Added learningType property
   lessonStructure?: LessonStructure; // Added new lesson structure
+  activity?: ActivitySettings; // Added activity settings
+}
+
+// New interface for activity settings
+export interface ActivitySettings {
+  activityType: "teacher-led" | "print-practice" | "student-devices";
+  teamMode: {
+    enabled: boolean;
+    numberOfTeams?: number;
+    teams?: TeamInfo[];
+  };
+  scoring: {
+    enabled: boolean;
+    type?: "points" | "badges";
+  };
+}
+
+// Team information interface
+export interface TeamInfo {
+  id: string;
+  name: string;
+  color: string;
+  emoji: string;
+  score?: number;
 }
 
 export interface LessonContent {
