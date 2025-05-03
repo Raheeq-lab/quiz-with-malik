@@ -59,6 +59,7 @@ export interface Lesson {
   accessCode: string;
   learningType: string; // Added learningType property
   lessonStructure?: LessonStructure; // Added new lesson structure
+  activity?: ActivitySettings; // Added activity settings to Lesson
 }
 
 export interface LessonContent {

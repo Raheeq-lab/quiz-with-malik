@@ -7,10 +7,16 @@ interface GradeSelectorProps {
   selectedGrades: number[];
   onChange: (grades: number[]) => void;  
   subject?: "math" | "english" | "ict";
+  availableGrades?: number[]; // Added this prop
 }
 
-const GradeSelector: React.FC<GradeSelectorProps> = ({ selectedGrades, onChange, subject = "math" }) => {
-  const grades = [3, 4, 5, 6, 7, 8, 9, 10];
+const GradeSelector: React.FC<GradeSelectorProps> = ({ 
+  selectedGrades, 
+  onChange, 
+  subject = "math",
+  availableGrades = [3, 4, 5, 6, 7, 8, 9, 10] // Default if not provided
+}) => {
+  const grades = availableGrades;
   
   const handleGradeChange = (grade: number) => {
     if (selectedGrades.includes(grade)) {

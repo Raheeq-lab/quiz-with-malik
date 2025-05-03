@@ -201,6 +201,208 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
         return [initialContent];
     }
   };
+  
+  // Add the missing handler functions for activity settings
+  const handleActivityTypeChange = (index: number, activityType: "teacher-led" | "print-practice" | "student-devices") => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity') return block;
+      return {
+        ...block,
+        activity: {
+          ...(block.activity || { 
+            activityType: "teacher-led", 
+            teamMode: { enabled: false }, 
+            scoring: { enabled: false } 
+          }),
+          activityType
+        }
+      };
+    }));
+  };
+  
+  const handleTeamModeToggle = (index: number, enabled: boolean) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity') return block;
+      
+      // Initialize teams if enabling team mode
+      let teams: TeamInfo[] | undefined = block.activity?.teamMode?.teams;
+      
+      if (enabled && (!teams || teams.length === 0)) {
+        const numberOfTeams = block.activity?.teamMode?.numberOfTeams || 3;
+        teams = Array.from({ length: numberOfTeams }, (_, teamIndex) => ({
+          id: `team-${Date.now()}-${teamIndex}`,
+          name: `Team ${teamIndex + 1}`,
+          color: COLOR_OPTIONS[teamIndex % COLOR_OPTIONS.length],
+          emoji: EMOJI_OPTIONS[teamIndex % EMOJI_OPTIONS.length]
+        }));
+      }
+      
+      return {
+        ...block,
+        activity: {
+          ...(block.activity || { 
+            activityType: "teacher-led", 
+            teamMode: { enabled: false }, 
+            scoring: { enabled: false } 
+          }),
+          teamMode: {
+            enabled,
+            numberOfTeams: block.activity?.teamMode?.numberOfTeams || 3,
+            teams
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleNumberOfTeamsChange = (index: number, numberOfTeams: number) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity') return block;
+      
+      // Adjust teams array based on new number
+      const currentTeams = block.activity?.teamMode?.teams || [];
+      let newTeams = [...currentTeams];
+      
+      if (numberOfTeams > currentTeams.length) {
+        // Add more teams
+        for (let j = currentTeams.length; j < numberOfTeams; j++) {
+          newTeams.push({
+            id: `team-${Date.now()}-${j}`,
+            name: `Team ${j + 1}`,
+            color: COLOR_OPTIONS[j % COLOR_OPTIONS.length],
+            emoji: EMOJI_OPTIONS[j % EMOJI_OPTIONS.length]
+          });
+        }
+      } else if (numberOfTeams < currentTeams.length) {
+        // Remove teams
+        newTeams = newTeams.slice(0, numberOfTeams);
+      }
+      
+      return {
+        ...block,
+        activity: {
+          ...(block.activity || { 
+            activityType: "teacher-led", 
+            teamMode: { enabled: false }, 
+            scoring: { enabled: false } 
+          }),
+          teamMode: {
+            ...block.activity?.teamMode,
+            numberOfTeams,
+            teams: newTeams
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleTeamNameChange = (index: number, teamIndex: number, name: string) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || !block.activity?.teamMode?.teams) return block;
+      
+      const newTeams = [...block.activity.teamMode.teams];
+      if (newTeams[teamIndex]) {
+        newTeams[teamIndex] = { ...newTeams[teamIndex], name };
+      }
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          teamMode: {
+            ...block.activity.teamMode,
+            teams: newTeams
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleTeamEmojiChange = (index: number, teamIndex: number, emoji: string) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || !block.activity?.teamMode?.teams) return block;
+      
+      const newTeams = [...block.activity.teamMode.teams];
+      if (newTeams[teamIndex]) {
+        newTeams[teamIndex] = { ...newTeams[teamIndex], emoji };
+      }
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          teamMode: {
+            ...block.activity.teamMode,
+            teams: newTeams
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleTeamColorChange = (index: number, teamIndex: number, color: string) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || !block.activity?.teamMode?.teams) return block;
+      
+      const newTeams = [...block.activity.teamMode.teams];
+      if (newTeams[teamIndex]) {
+        newTeams[teamIndex] = { ...newTeams[teamIndex], color };
+      }
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          teamMode: {
+            ...block.activity.teamMode,
+            teams: newTeams
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleScoringToggle = (index: number, enabled: boolean) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity') return block;
+      
+      return {
+        ...block,
+        activity: {
+          ...(block.activity || { 
+            activityType: "teacher-led", 
+            teamMode: { enabled: false }, 
+            scoring: { enabled: false } 
+          }),
+          scoring: {
+            enabled,
+            type: block.activity?.scoring?.type || "points"
+          }
+        }
+      };
+    }));
+  };
+  
+  const handleScoringTypeChange = (index: number, type: "points" | "badges") => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity') return block;
+      
+      return {
+        ...block,
+        activity: {
+          ...(block.activity || { 
+            activityType: "teacher-led", 
+            teamMode: { enabled: false }, 
+            scoring: { enabled: false } 
+          }),
+          scoring: {
+            ...block.activity.scoring,
+            type
+          }
+        }
+      };
+    }));
+  };
 
   // Handle learning type selection
   const handleLearningTypeChange = (typeId: string) => {
@@ -689,512 +891,4 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                         <div className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${team.color}`}>
                           {team.emoji}
                         </div>
-                        <Input
-                          value={team.name}
-                          onChange={(e) => handleTeamNameChange(index, teamIndex, e.target.value)}
-                          placeholder={`Team ${teamIndex + 1}`}
-                          className="flex-1 min-w-[120px]"
-                        />
-                        <div className="flex gap-1">
-                          <select 
-                            value={team.emoji} 
-                            onChange={(e) => handleTeamEmojiChange(index, teamIndex, e.target.value)}
-                            className="w-12 h-9 rounded-md border border-input bg-background px-2"
-                          >
-                            {EMOJI_OPTIONS.map(emoji => (
-                              <option key={emoji} value={emoji}>{emoji}</option>
-                            ))}
-                          </select>
-                          <select 
-                            value={team.color} 
-                            onChange={(e) => handleTeamColorChange(index, teamIndex, e.target.value)}
-                            className="w-12 h-9 rounded-md border border-input bg-background px-2"
-                          >
-                            {COLOR_OPTIONS.map(color => (
-                              <option key={color} value={color}>
-                                {color.replace("bg-", "").replace("-500", "")}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-4 border-t pt-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`scoring-${index}`} className="flex items-center gap-2">
-                  <span className="text-xl">🏆</span> Enable Scoring
-                </Label>
-                <Switch 
-                  id={`scoring-${index}`}
-                  checked={block.activity?.scoring?.enabled || false}
-                  onCheckedChange={(checked) => handleScoringToggle(index, checked)}
-                />
-              </div>
-              
-              {block.activity?.scoring?.enabled && (
-                <div className="space-y-4 pl-4 pt-2 border-l-2 border-blue-200">
-                  <RadioGroup 
-                    value={block.activity.scoring.type || "points"} 
-                    onValueChange={(value) => handleScoringTypeChange(index, value as any)}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="points" id={`points-${index}`} />
-                      <Label htmlFor={`points-${index}`}>Points</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="badges" id={`badges-${index}`} />
-                      <Label htmlFor={`badges-${index}`}>Badges</Label>
-                    </div>
-                  </RadioGroup>
-                  
-                  <div className="border rounded-md p-3 bg-gray-50">
-                    <h4 className="text-sm font-medium mb-2">Preview</h4>
-                    {block.activity.scoring.type === "points" ? (
-                      <div className="flex gap-4">
-                        {block.activity.teamMode?.enabled && block.activity.teamMode.teams?.slice(0, 3).map(team => (
-                          <div key={team.id} className="text-center">
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-full text-white ${team.color} mx-auto`}>
-                              {team.emoji}
-                            </div>
-                            <div className="text-xs mt-1">{team.name}</div>
-                            <div className="text-md font-bold">0 pts</div>
-                          </div>
-                        ))}
-                        {!block.activity.teamMode?.enabled && (
-                          <div className="text-sm">Individual student points will be tracked</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex gap-4">
-                        <div className="text-center">
-                          <div className="text-2xl">🥇</div>
-                          <div className="text-xs">First Place</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl">🌟</div>
-                          <div className="text-xs">Star Badge</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-2xl">🏆</div>
-                          <div className="text-xs">Trophy</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      
-      case 'imageWithPrompt':
-        return (
-          <div className="space-y-4">
-            <Label>Image with Question/Prompt</Label>
-            {block.imageUrl ? (
-              <div className="relative mb-2">
-                <img 
-                  src={block.imageUrl} 
-                  alt={`Image for block ${index + 1}`}
-                  className="max-h-60 rounded-md border border-gray-200"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  className="absolute top-1 right-1 h-8 w-8 p-1 rounded-full"
-                  onClick={() => removeImage(index)}
-                >
-                  <X size={16} />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(index, e)}
-                  ref={(el) => {
-                    if (fileInputRefs.current.length <= index) {
-                      fileInputRefs.current = [...fileInputRefs.current, el];
-                    } else {
-                      fileInputRefs.current[index] = el;
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => fileInputRefs.current[index]?.click()}
-                >
-                  <Upload size={16} />
-                  Upload Image
-                </Button>
-                <span className="text-sm text-gray-500">Max size: 5MB</span>
-              </div>
-            )}
-            
-            <div>
-              <Label>Question/Prompt</Label>
-              <Textarea
-                value={block.prompt || ''}
-                onChange={(e) => handleContentChange(index, 'prompt', e.target.value)}
-                placeholder="e.g., Describe what you see in this image."
-                rows={2}
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Label>Answer Options (Optional)</Label>
-                <Button
-                  type="button"
-                  onClick={() => handleAddOption(index)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <Plus size={16} />
-                  Add Option
-                </Button>
-              </div>
-              
-              {(block.options || []).map((option, optionIndex) => (
-                <div key={optionIndex} className="flex items-center gap-2">
-                  <div className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100">
-                    {String.fromCharCode(65 + optionIndex)}
-                  </div>
-                  <Input
-                    value={option}
-                    onChange={(e) => handleOptionChange(index, optionIndex, e.target.value)}
-                    placeholder={`Option ${String.fromCharCode(65 + optionIndex)}`}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleRemoveOption(index, optionIndex)}
-                  >
-                    <X size={16} />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      
-      // For now, we'll handle drag-and-drop and labeling similarly to imageWithPrompt
-      case 'dragAndDrop':
-      case 'labeling':
-        // ... keep existing code
-        return (
-          <div className="space-y-4">
-            <Label>{block.type === 'dragAndDrop' ? 'Drag and Drop Exercise' : 'Labeling Exercise'}</Label>
-            
-            {block.imageUrl ? (
-              <div className="relative mb-2">
-                <img 
-                  src={block.imageUrl} 
-                  alt={`Image for block ${index + 1}`}
-                  className="max-h-60 rounded-md border border-gray-200"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  className="absolute top-1 right-1 h-8 w-8 p-1 rounded-full"
-                  onClick={() => removeImage(index)}
-                >
-                  <X size={16} />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(index, e)}
-                  ref={(el) => {
-                    if (fileInputRefs.current.length <= index) {
-                      fileInputRefs.current = [...fileInputRefs.current, el];
-                    } else {
-                      fileInputRefs.current[index] = el;
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => fileInputRefs.current[index]?.click()}
-                >
-                  <Upload size={16} />
-                  Upload Image
-                </Button>
-                <span className="text-sm text-gray-500">Max size: 5MB</span>
-              </div>
-            )}
-            
-            <div>
-              <Label>Instructions</Label>
-              <Textarea
-                value={block.content || ''}
-                onChange={(e) => handleContentChange(index, 'content', e.target.value)}
-                placeholder={block.type === 'dragAndDrop' 
-                  ? "e.g., Drag the labels to the correct parts of the image." 
-                  : "e.g., Label the components of this computer."
-                }
-                rows={2}
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Label>{block.type === 'dragAndDrop' ? 'Items to Drag' : 'Labels'}</Label>
-                <Button
-                  type="button"
-                  onClick={() => handleAddOption(index)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <Plus size={16} />
-                  Add Item
-                </Button>
-              </div>
-              
-              {(block.options || []).map((option, optionIndex) => (
-                <div key={optionIndex} className="flex items-center gap-2">
-                  <Input
-                    value={option}
-                    onChange={(e) => handleOptionChange(index, optionIndex, e.target.value)}
-                    placeholder={block.type === 'dragAndDrop' ? `Item ${optionIndex + 1}` : `Label ${optionIndex + 1}`}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleRemoveOption(index, optionIndex)}
-                  >
-                    <X size={16} />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      
-      default:
-        return null;
-    }
-  };
-  
-  // Get the list of learning types based on subject
-  const learningTypes = getLearningTypes();
-  
-  return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          {getSubjectIcon()}
-          <span>Create New {subject.charAt(0).toUpperCase() + subject.slice(1)} Lesson</span>
-        </CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          className="flex items-center gap-1"
-        >
-          <ArrowLeft size={16} />
-          Back
-        </Button>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Lesson Title</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Introduction to Vocabulary"
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description of what this lesson covers"
-                rows={2}
-              />
-            </div>
-
-            {/* Learning Types Selection */}
-            <div>
-              <Label htmlFor="learningType">Learning Type</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-                {learningTypes.map((type) => (
-                  <div
-                    key={type.id}
-                    className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                      selectedLearningType === type.id
-                        ? subject === "math"
-                          ? "bg-purple-100 border-purple-400"
-                          : subject === "english"
-                          ? "bg-green-100 border-green-400"
-                          : "bg-orange-100 border-orange-400"
-                        : "hover:border-gray-400"
-                    }`}
-                    onClick={() => handleLearningTypeChange(type.id)}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      {type.icon}
-                      <span className="font-medium">{type.title}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">{type.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Lesson Content</h3>
-              
-              <div className="flex items-center gap-2">
-                <Tabs defaultValue="text">
-                  <TabsList>
-                    <TabsTrigger value="text">Text</TabsTrigger>
-                    <TabsTrigger value="media">Media</TabsTrigger>
-                    <TabsTrigger value="interactive">Interactive</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="text" className="space-y-0 py-0 px-0 mt-0">
-                    <Button
-                      type="button"
-                      onClick={() => handleAddContent('text')}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                    >
-                      <Plus size={16} />
-                      Add Text Block
-                    </Button>
-                  </TabsContent>
-                  <TabsContent value="media" className="space-y-0 py-0 px-0 mt-0">
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={() => handleAddContent('image')}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        <Image size={16} />
-                        Add Image
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleAddContent('video')}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        <Video size={16} />
-                        Add Video
-                      </Button>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="interactive" className="space-y-0 py-0 px-0 mt-0">
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        onClick={() => handleAddContent('imageWithPrompt')}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Image + Question
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleAddContent('dragAndDrop')}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Drag & Drop
-                      </Button>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </div>
-            
-            {contentBlocks.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-500">Add content blocks to your lesson.</p>
-                <p className="text-gray-500">Start by clicking one of the buttons above.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {contentBlocks.map((block, index) => (
-                  <div 
-                    key={block.id} 
-                    className={`border rounded-lg p-4 space-y-4 ${getSubjectColorClass()}`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-md font-medium flex items-center gap-2">
-                        {block.type === 'text' && <FileText size={18} />}
-                        {block.type === 'image' && <Image size={18} />}
-                        {block.type === 'video' && <Video size={18} />}
-                        {block.type === 'imageWithPrompt' && <FileText size={18} />}
-                        {block.type === 'dragAndDrop' && <FileText size={18} />}
-                        {block.type === 'labeling' && <FileText size={18} />}
-                        <span>{block.type.charAt(0).toUpperCase() + block.type.slice(1)} Block {index + 1}</span>
-                      </h4>
-                      <Button
-                        type="button"
-                        onClick={() => handleRemoveContent(index)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                    
-                    {renderContentBlock(block, index)}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-        
-        <CardFooter className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit">Create Lesson</Button>
-        </CardFooter>
-      </form>
-    </Card>
-  );
-};
-
-export default LessonBuilder;
+                        <
