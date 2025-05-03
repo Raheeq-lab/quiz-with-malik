@@ -131,7 +131,6 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
   const [lessonStructure, setLessonStructure] = useState<LessonStructure>(initialLessonStructure);
   const [activePhase, setActivePhase] = useState<keyof LessonStructure>("engage");
   const [showPreview, setShowPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState<"structure" | "activity">("structure");
   const [activitySettings, setActivitySettings] = useState<ActivitySettings>(initialActivitySettings);
   
   const aiTools = getAiToolSuggestions(subject);
@@ -741,6 +740,7 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
           <CardContent className="space-y-6">
             {/* Lesson Details */}
             <div className="grid md:grid-cols-2 gap-4">
+              {/* ... keep existing code (lesson details inputs) */}
               <div>
                 <Label htmlFor="title">Lesson Title</Label>
                 <Input
@@ -799,205 +799,193 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
               </div>
             </div>
             
-            {/* Main Builder Tabs */}
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "structure" | "activity")}>
-              <TabsList className="grid grid-cols-2 mb-4 w-full md:w-1/2">
-                <TabsTrigger value="structure">Lesson Structure</TabsTrigger>
-                <TabsTrigger value="activity">Activity Settings</TabsTrigger>
-              </TabsList>
-              
-              {/* Lesson Structure Tab Content */}
-              <TabsContent value="structure" className="space-y-6">
-                <Tabs 
-                  value={activePhase} 
-                  onValueChange={(value) => setActivePhase(value as keyof LessonStructure)}
-                  className="w-full"
-                >
-                  <TabsList className="grid grid-cols-5 mb-4">
-                    <TabsTrigger 
-                      value="engage"
-                      className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
-                    >
-                      Engage
-                      <span className="ml-1 text-xs">({lessonStructure.engage.timeInMinutes}m)</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="model"
-                      className="data-[state=active]:bg-purple-500 data-[state=active]:text-white"
-                    >
-                      Model
-                      <span className="ml-1 text-xs">({lessonStructure.model.timeInMinutes}m)</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="guidedPractice"
-                      className="data-[state=active]:bg-green-500 data-[state=active]:text-white"
-                    >
-                      Guided
-                      <span className="ml-1 text-xs">({lessonStructure.guidedPractice.timeInMinutes}m)</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="independentPractice"
-                      className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
-                    >
-                      Independent
-                      <span className="ml-1 text-xs">({lessonStructure.independentPractice.timeInMinutes}m)</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="reflect"
-                      className="data-[state=active]:bg-pink-500 data-[state=active]:text-white"
-                    >
-                      Reflect
-                      <span className="ml-1 text-xs">({lessonStructure.reflect.timeInMinutes}m)</span>
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  {(["engage", "model", "guidedPractice", "independentPractice", "reflect"] as const).map((phase) => (
-                    <TabsContent key={phase} value={phase} className="pt-2">
-                      <Card>
-                        <CardHeader className={`py-3 ${getPhaseColor(phase)}`}>
-                          <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg">{lessonStructure[phase].title}</CardTitle>
-                            <div className="flex items-center gap-2">
-                              <Label htmlFor={`${phase}-time`} className="text-white text-xs">Minutes:</Label>
-                              <Input
-                                id={`${phase}-time`}
-                                type="number"
-                                min={1}
-                                max={30}
-                                value={lessonStructure[phase].timeInMinutes}
-                                onChange={(e) => handlePhaseTimeChange(phase, parseInt(e.target.value) || 1)}
-                                className="w-16 h-7 px-2 py-1 bg-white/20 border-white/10 focus:bg-white focus:text-black"
-                              />
-                            </div>
+            {/* Remove the tabs section and just show lesson structure directly */}
+            <div className="space-y-6">
+              <Tabs 
+                value={activePhase} 
+                onValueChange={(value) => setActivePhase(value as keyof LessonStructure)}
+                className="w-full"
+              >
+                <TabsList className="grid grid-cols-5 mb-4">
+                  <TabsTrigger 
+                    value="engage"
+                    className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+                  >
+                    Engage
+                    <span className="ml-1 text-xs">({lessonStructure.engage.timeInMinutes}m)</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="model"
+                    className="data-[state=active]:bg-purple-500 data-[state=active]:text-white"
+                  >
+                    Model
+                    <span className="ml-1 text-xs">({lessonStructure.model.timeInMinutes}m)</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="guidedPractice"
+                    className="data-[state=active]:bg-green-500 data-[state=active]:text-white"
+                  >
+                    Guided
+                    <span className="ml-1 text-xs">({lessonStructure.guidedPractice.timeInMinutes}m)</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="independentPractice"
+                    className="data-[state=active]:bg-orange-500 data-[state=active]:text-white"
+                  >
+                    Independent
+                    <span className="ml-1 text-xs">({lessonStructure.independentPractice.timeInMinutes}m)</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="reflect"
+                    className="data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                  >
+                    Reflect
+                    <span className="ml-1 text-xs">({lessonStructure.reflect.timeInMinutes}m)</span>
+                  </TabsTrigger>
+                </TabsList>
+                
+                {(["engage", "model", "guidedPractice", "independentPractice", "reflect"] as const).map((phase) => (
+                  <TabsContent key={phase} value={phase} className="pt-2">
+                    {/* ... keep existing code (phase content) */}
+                    <Card>
+                      <CardHeader className={`py-3 ${getPhaseColor(phase)}`}>
+                        <div className="flex justify-between items-center">
+                          <CardTitle className="text-lg">{lessonStructure[phase].title}</CardTitle>
+                          <div className="flex items-center gap-2">
+                            <Label htmlFor={`${phase}-time`} className="text-white text-xs">Minutes:</Label>
+                            <Input
+                              id={`${phase}-time`}
+                              type="number"
+                              min={1}
+                              max={30}
+                              value={lessonStructure[phase].timeInMinutes}
+                              onChange={(e) => handlePhaseTimeChange(phase, parseInt(e.target.value) || 1)}
+                              className="w-16 h-7 px-2 py-1 bg-white/20 border-white/10 focus:bg-white focus:text-black"
+                            />
                           </div>
-                        </CardHeader>
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="p-4">
+                        {/* ... keep existing code (phase instructions) */}
+                        {phase === "engage" && (
+                          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded mb-4">
+                            <p><strong>Engage Phase:</strong> Hook students' interest and activate prior knowledge. Add brief activities, questions, or visuals to spark curiosity about the topic.</p>
+                          </div>
+                        )}
                         
-                        <CardContent className="p-4">
-                          {phase === "engage" && (
-                            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded mb-4">
-                              <p><strong>Engage Phase:</strong> Hook students' interest and activate prior knowledge. Add brief activities, questions, or visuals to spark curiosity about the topic.</p>
-                            </div>
-                          )}
-                          
-                          {phase === "model" && (
-                            <div className="text-sm text-gray-600 bg-purple-50 p-3 rounded mb-4">
-                              <p><strong>Model Phase:</strong> Demonstrate the concept or skill. Include clear explanations, examples, and visual representations to show students what they'll be learning.</p>
-                            </div>
-                          )}
-                          
-                          {phase === "guidedPractice" && (
-                            <div className="text-sm text-gray-600 bg-green-50 p-3 rounded mb-4">
-                              <p><strong>Guided Practice Phase:</strong> Support students as they try the skill together. Add questions, hints, and scaffolds to guide their practice with your support.</p>
-                            </div>
-                          )}
-                          
-                          {phase === "independentPractice" && (
-                            <div className="text-sm text-gray-600 bg-orange-50 p-3 rounded mb-4">
-                              <p><strong>Independent Practice Phase:</strong> Let students apply skills on their own. Create activities, questions, or problems for students to solve independently.</p>
-                            </div>
-                          )}
-                          
-                          {phase === "reflect" && (
-                            <div className="text-sm text-gray-600 bg-pink-50 p-3 rounded mb-4">
-                              <p><strong>Reflect Phase:</strong> Close the learning loop. Add summarizing questions, exit tickets, or self-assessment prompts to solidify learning.</p>
-                            </div>
-                          )}
-                          
-                          {lessonStructure[phase].content.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <p className="text-center">No content blocks added yet</p>
-                              <p className="text-center text-sm">Add content using the buttons below</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-6">
-                              {lessonStructure[phase].content.map((content, index) => (
-                                <div key={content.id} className="border rounded-md p-4 bg-white shadow-sm">
-                                  {renderContentBlock(phase, content, index)}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          
-                          <div className="flex flex-wrap gap-2 mt-6">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                              onClick={() => handleAddContent(phase, "text")}
-                            >
-                              <Plus size={14} />
-                              Add Text
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                              onClick={() => handleAddContent(phase, "image")}
-                            >
-                              <Plus size={14} />
-                              Add Image
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                              onClick={() => handleAddContent(phase, "video")}
-                            >
-                              <Plus size={14} />
-                              Add Video
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                              onClick={() => handleAddContent(phase, "quiz")}
-                            >
-                              <Plus size={14} />
-                              Add Quiz
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                              onClick={() => handleAddContent(phase, "activity")}
-                            >
-                              <Plus size={14} />
-                              Add Activity
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1"
-                              onClick={() => handleAddContent(phase, "resource")}
-                            >
-                              <Plus size={14} />
-                              Add Resource
-                            </Button>
+                        {phase === "model" && (
+                          <div className="text-sm text-gray-600 bg-purple-50 p-3 rounded mb-4">
+                            <p><strong>Model Phase:</strong> Demonstrate the concept or skill. Include clear explanations, examples, and visual representations to show students what they'll be learning.</p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </TabsContent>
-              
-              {/* Activity Settings Tab Content */}
-              <TabsContent value="activity">
-                <ActivitySection
-                  activity={activitySettings}
-                  onChange={handleActivityChange}
-                />
-              </TabsContent>
-            </Tabs>
+                        )}
+                        
+                        {phase === "guidedPractice" && (
+                          <div className="text-sm text-gray-600 bg-green-50 p-3 rounded mb-4">
+                            <p><strong>Guided Practice Phase:</strong> Support students as they try the skill together. Add questions, hints, and scaffolds to guide their practice with your support.</p>
+                          </div>
+                        )}
+                        
+                        {phase === "independentPractice" && (
+                          <div className="text-sm text-gray-600 bg-orange-50 p-3 rounded mb-4">
+                            <p><strong>Independent Practice Phase:</strong> Let students apply skills on their own. Create activities, questions, or problems for students to solve independently.</p>
+                          </div>
+                        )}
+                        
+                        {phase === "reflect" && (
+                          <div className="text-sm text-gray-600 bg-pink-50 p-3 rounded mb-4">
+                            <p><strong>Reflect Phase:</strong> Close the learning loop. Add summarizing questions, exit tickets, or self-assessment prompts to solidify learning.</p>
+                          </div>
+                        )}
+                        
+                        {/* ... keep existing code (content blocks) */}
+                        {lessonStructure[phase].content.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p className="text-center">No content blocks added yet</p>
+                            <p className="text-center text-sm">Add content using the buttons below</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-6">
+                            {lessonStructure[phase].content.map((content, index) => (
+                              <div key={content.id} className="border rounded-md p-4 bg-white shadow-sm">
+                                {renderContentBlock(phase, content, index)}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* ... keep existing code (add content buttons) */}
+                        <div className="flex flex-wrap gap-2 mt-6">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() => handleAddContent(phase, "text")}
+                          >
+                            <Plus size={14} />
+                            Add Text
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() => handleAddContent(phase, "image")}
+                          >
+                            <Plus size={14} />
+                            Add Image
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() => handleAddContent(phase, "video")}
+                          >
+                            <Plus size={14} />
+                            Add Video
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() => handleAddContent(phase, "quiz")}
+                          >
+                            <Plus size={14} />
+                            Add Quiz
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() => handleAddContent(phase, "activity")}
+                          >
+                            <Plus size={14} />
+                            Add Activity
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1"
+                            onClick={() => handleAddContent(phase, "resource")}
+                          >
+                            <Plus size={14} />
+                            Add Resource
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </div>
           </CardContent>
           
           <CardFooter className="border-t pt-4 flex flex-wrap gap-3 justify-between">

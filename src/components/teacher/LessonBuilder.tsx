@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -667,7 +668,18 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       case 'text':
         return (
           <div className="space-y-2">
-            <Label>Text Content</Label>
+            <div className="flex justify-between items-center">
+              <Label>Text Content</Label>
+              <Button
+                type="button"
+                onClick={() => handleRemoveContent(index)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-red-500"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
             <Textarea
               value={block.content}
               onChange={(e) => handleContentChange(index, 'content', e.target.value)}
@@ -680,7 +692,18 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       case 'image':
         return (
           <div className="space-y-4">
-            <Label>Image</Label>
+            <div className="flex justify-between items-center">
+              <Label>Image</Label>
+              <Button
+                type="button"
+                onClick={() => handleRemoveContent(index)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-red-500"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
             {block.imageUrl ? (
               <div className="relative mb-2">
                 <img 
@@ -739,7 +762,18 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       case 'video':
         return (
           <div className="space-y-4">
-            <Label>Video</Label>
+            <div className="flex justify-between items-center">
+              <Label>Video</Label>
+              <Button
+                type="button"
+                onClick={() => handleRemoveContent(index)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-red-500"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
             {block.videoUrl ? (
               <div className="relative mb-2">
                 <video 
@@ -798,6 +832,19 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       case 'activity':
         return (
           <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <Label>Activity Content</Label>
+              <Button
+                type="button"
+                onClick={() => handleRemoveContent(index)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-red-500"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
+
             <div className="space-y-3">
               <Label>Activity Title</Label>
               <Input
@@ -1051,29 +1098,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
                   key={block.id}
                   className="border rounded-lg p-4 relative"
                 >
-                  <div className="absolute top-2 right-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="h-8 w-8 p-0 rounded-full"
-                      onClick={() => handleRemoveContent(index)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                  
-                  <div className="mb-4 pb-2 border-b">
-                    <div className="flex items-center gap-2">
-                      {block.type === 'text' && <FileText size={18} />}
-                      {block.type === 'image' && <Image size={18} />}
-                      {block.type === 'imageWithPrompt' && <Image size={18} />}
-                      {block.type === 'video' && <Video size={18} />}
-                      {block.type === 'activity' && <Activity size={18} />}
-                      <span className="font-medium capitalize">{block.type.replace(/([A-Z])/g, ' $1').trim()} Block</span>
-                    </div>
-                  </div>
-                  
                   {renderContentBlock(block, index)}
                 </div>
               ))}
