@@ -52,6 +52,20 @@ const COLOR_OPTIONS = [
   "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-orange-500"
 ];
 
+// Add new game types
+const GAME_TYPES = [
+  {
+    id: "quiz",
+    title: "Quiz Game",
+    description: "Traditional quiz with multiple questions and answers"
+  },
+  {
+    id: "grid",
+    title: "Grid Game",
+    description: "Interactive grid where teams select numbers to reveal questions"
+  }
+];
+
 const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel, subject = "math" }) => {
   const { toast } = useToast();
   const [title, setTitle] = useState('');
@@ -72,7 +86,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     type: 'text' | 'image' | 'multiple-choice';
   }[]>([]);
 
-  // Define learning types based on selected subject
   const getLearningTypes = (): LearningTypeOption[] => {
     switch (subject) {
       case "math":
@@ -232,6 +245,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
         updatedActivity = {
           ...updatedActivity,
           gameTitle: "Fun Quiz Game",
+          gameType: "quiz", // Default to quiz game type
           gameQuestions: [
             {
               id: `question-${Date.now()}-0`,
@@ -261,7 +275,8 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
           gameSettings: {
             randomizeQuestions: true,
             timerEnabled: false,
-            timerDuration: 30
+            timerDuration: 30,
+            gridSize: 3 // 3x3 default grid size for grid games
           },
           // Ensure team mode is enabled for games
           teamMode: {
@@ -678,6 +693,39 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     reader.readAsDataURL(file);
   };
 
+  // New handler for game type change
+  const handleGameTypeChange = (index: number, gameType: "quiz" | "grid") => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameType
+        }
+      };
+    }));
+  };
+
+  // New handler for grid size change
+  const handleGridSizeChange = (index: number, gridSize: number) => {
+    setContentBlocks(prev => prev.map((block, i) => {
+      if (i !== index || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
+      
+      return {
+        ...block,
+        activity: {
+          ...block.activity,
+          gameSettings: {
+            ...(block.activity.gameSettings || {}),
+            gridSize
+          }
+        }
+      };
+    }));
+  };
+
   // Handle learning type selection
   const handleLearningTypeChange = (typeId: string) => {
     setSelectedLearningType(typeId);
@@ -905,35 +953,4 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       id: `lesson-${Date.now()}`,
       title,
       description,
-      gradeLevel: grades[0] || 1, // Use the first grade from the dashboard
-      subject,
-      learningType: selectedLearningType,
-      content: contentBlocks,
-      accessCode: generateAccessCode(),
-      createdBy: JSON.parse(localStorage.getItem('mathWithMalikTeacher') || '{}').id || 'unknown',
-      createdAt: new Date().toISOString(),
-    };
-    
-    onSave(lesson);
-  };
-
-  const getSubjectIcon = () => {
-    switch (subject) {
-      case "math": return <BookOpen className="text-purple-500" />;
-      case "english": return <BookText className="text-green-500" />;
-      case "ict": return <Laptop className="text-orange-500" />;
-      default: return <BookOpen className="text-purple-500" />;
-    }
-  };
-
-  // Get color based on subject
-  const getSubjectColorClass = () => {
-    switch (subject) {
-      case "math": return "border-purple-300 bg-purple-50 text-purple-900";
-      case "english": return "border-green-300 bg-green-50 text-green-900";
-      case "ict": return "border-orange-300 bg-orange-50 text-orange-900";
-      default: return "border-purple-300 bg-purple-50 text-purple-900";
-    }
-  };
-
-  const renderContentBlock = (block: LessonContent, index
+      grade

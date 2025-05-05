@@ -112,6 +112,7 @@ export interface LessonPhaseContent {
 // Activity settings interface
 export interface ActivitySettings {
   activityType: "teacher-led" | "print-practice" | "student-devices" | "game";
+  gameType?: "quiz" | "grid"; // Added game type for grid game
   teamMode: {
     enabled: boolean;
     numberOfTeams?: number;
@@ -127,6 +128,7 @@ export interface ActivitySettings {
     randomizeQuestions?: boolean;
     timerEnabled?: boolean;
     timerDuration?: number;
+    gridSize?: number; // Added grid size for grid games (2x2, 3x3, 4x4, etc)
   };
 }
 
