@@ -75,7 +75,7 @@ const GAME_TYPES = [
 ];
 
 // Helper function to get subject color class
-const getSubjectColorClass = () => {
+const getSubjectColorClass = (subject: "math" | "english" | "ict") => {
   switch (subject) {
     case "math": return "text-purple-600";
     case "english": return "text-green-600";
