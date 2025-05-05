@@ -10,12 +10,19 @@ import {
   X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, 
   BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, 
   Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp, 
-  Video, ArrowLeft, Activity, Timer, Star, Users, Gamepad
+  Video, ArrowLeft, Activity, Timer, Star, Users, Gamepad, GameQuestion as GameQuestionIcon
 } from "lucide-react";
 import { Lesson, LessonContent, ActivitySettings, TeamInfo, GameQuestion } from '@/types/quiz';
 import SubjectSelector from '@/components/SubjectSelector';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 interface LearningTypeOption {
   id: string;
@@ -66,6 +73,16 @@ const GAME_TYPES = [
   }
 ];
 
+// Helper function to get subject color class
+const getSubjectColorClass = (subject: "math" | "english" | "ict" = "math") => {
+  switch (subject) {
+    case "math": return "text-purple-600";
+    case "english": return "text-green-600";
+    case "ict": return "text-orange-600";
+    default: return "text-blue-600";
+  }
+};
+
 const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel, subject = "math" }) => {
   const { toast } = useToast();
   const [title, setTitle] = useState('');
@@ -75,7 +92,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const videoInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // New game activity state - Fixed by removing the backslash
+  // New game activity state
   const [gameQuestions, setGameQuestions] = useState<{
     id: string;
     text: string;
@@ -192,7 +209,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }
   };
 
-  // Get suggested content blocks based on learning type
   const getSuggestedContentBlocks = (learningTypeId: string): LessonContent[] => {
     switch (learningTypeId) {
       case "problem-solving":
@@ -226,7 +242,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }
   };
   
-  // Add the handler functions for activity settings
   const handleActivityTypeChange = (index: number, activityType: "teacher-led" | "print-practice" | "student-devices" | "game") => {
     setContentBlocks(prev => prev.map((block, i) => {
       if (i !== index || block.type !== 'activity') return block;
@@ -308,7 +323,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       };
     }));
   };
-  
+
   const handleTeamModeToggle = (index: number, enabled: boolean) => {
     setContentBlocks(prev => prev.map((block, i) => {
       if (i !== index || block.type !== 'activity') return block;
@@ -450,7 +465,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       };
     }));
   };
-  
+
   const handleScoringToggle = (index: number, enabled: boolean) => {
     setContentBlocks(prev => prev.map((block, i) => {
       if (i !== index || block.type !== 'activity') return block;
@@ -493,7 +508,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }));
   };
 
-  // New Game Activity handlers
   const handleAddGameQuestion = (index: number) => {
     setContentBlocks(prev => prev.map((block, i) => {
       if (i !== index || block.type !== 'activity' || block.activity?.activityType !== 'game') return block;
@@ -659,7 +673,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       };
     }));
   };
-  
+
   const handleGameQuestionImageUpload = (contentIndex: number, questionIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -726,7 +740,6 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }));
   };
 
-  // Handle learning type selection
   const handleLearningTypeChange = (typeId: string) => {
     setSelectedLearningType(typeId);
     
@@ -937,558 +950,3 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
         });
         return;
       }
-
-      if (block.type === 'imageWithPrompt' && !block.prompt?.trim()) {
-        toast({
-          title: "Missing prompt",
-          description: `Image prompt block ${i + 1} needs a prompt/question.`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    
-    // Create lesson object
-    const lesson: Lesson = {
-      id: `lesson-${Date.now()}`,
-      title,
-      description,
-      gradeLevel: grades[0] || 1, // Use the first grade from the dashboard
-      subject,
-      learningType: selectedLearningType,
-      content: contentBlocks,
-      accessCode: generateAccessCode(),
-      createdBy: JSON.parse(localStorage.getItem('mathWithMalikTeacher') || '{}').id || 'unknown',
-      createdAt: new Date().toISOString(),
-    };
-    
-    onSave(lesson);
-  };
-
-  const renderContentBlock = (block: LessonContent, index: number) => {
-    switch (block.type) {
-      case 'text':
-        return <Textarea 
-          id={`content-${block.id}`} 
-          value={block.content} 
-          onChange={(e) => handleContentChange(index, 'content', e.target.value)} 
-          placeholder="Enter your content here"
-          className="mt-1"
-        />;
-      case 'image':
-        return (
-          <div className="flex items-center">
-            <img 
-              src={block.imageUrl} 
-              alt="Content Image" 
-              className="w-full h-auto max-h-64 object-cover"
-            />
-            <button
-              type="button"
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              onClick={() => removeImage(index)}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        );
-      case 'imageWithPrompt':
-        return (
-          <div className="flex items-center">
-            <img 
-              src={block.imageUrl} 
-              alt="Content Image" 
-              className="w-full h-auto max-h-64 object-cover"
-            />
-            <button
-              type="button"
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              onClick={() => removeImage(index)}
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="ml-4">
-              <Textarea 
-                id={`prompt-${block.id}`} 
-                value={block.prompt} 
-                onChange={(e) => handleContentChange(index, 'prompt', e.target.value)} 
-                placeholder="Enter your prompt/question here"
-                className="mt-1"
-              />
-            </div>
-          </div>
-        );
-      case 'video':
-        return (
-          <div className="flex items-center">
-            <video 
-              src={block.videoUrl} 
-              controls 
-              className="w-full h-auto max-h-64 object-cover"
-            />
-            <button
-              type="button"
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              onClick={() => removeVideo(index)}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        );
-      case 'activity':
-        return (
-          <div className="flex items-center">
-            <div className="flex flex-col">
-              <div className="flex items-center">
-                <span className="font-medium text-gray-700 capitalize">
-                  {block.activity?.activityType}
-                </span>
-                <button
-                  type="button"
-                  className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                  onClick={() => handleRemoveContent(index)}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="mt-2">
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 capitalize">
-                    {block.activity?.teamMode?.enabled ? 'Team Mode' : 'Individual Mode'}
-                  </span>
-                  <Switch 
-                    checked={block.activity?.teamMode?.enabled || false} 
-                    onCheckedChange={(enabled) => handleTeamModeToggle(index, enabled)} 
-                    className="ml-2"
-                  />
-                </div>
-                <div className="mt-2">
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 capitalize">
-                      {block.activity?.scoring?.enabled ? 'Scoring' : 'No Scoring'}
-                    </span>
-                    <Switch 
-                      checked={block.activity?.scoring?.enabled || false} 
-                      onCheckedChange={(enabled) => handleScoringToggle(index, enabled)} 
-                      className="ml-2"
-                    />
-                  </div>
-                  {block.activity?.scoring?.enabled && (
-                    <div className="mt-2">
-                      <RadioGroup
-                        value={block.activity?.scoring?.type || "points"}
-                        onValueChange={(type) => handleScoringTypeChange(index, type)}
-                      >
-                        <RadioGroupItem value="points" className="mr-2" />
-                        <RadioGroupItem value="badges" className="mr-2" />
-                      </RadioGroup>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 capitalize">
-                      {block.activity?.activityType === 'game' ? 'Game Type' : 'Activity Type'}
-                    </span>
-                    <Select 
-                      value={block.activity?.activityType === 'game' ? block.activity?.gameType : block.activity?.activityType} 
-                      onValueChange={(value) => handleActivityTypeChange(index, value)}
-                      className="ml-2"
-                    >
-                      {GAME_TYPES.map((gameType) => (
-                        <SelectOption key={gameType.id} value={gameType.id}>
-                          {gameType.title}
-                        </SelectOption>
-                      ))}
-                    </Select>
-                  </div>
-                  {block.activity?.activityType === 'game' && (
-                    <div className="mt-2">
-                      <div className="flex items-center">
-                        <span className="font-medium text-gray-700 capitalize">
-                          Grid Size
-                        </span>
-                        <Select 
-                          value={block.activity?.gameSettings?.gridSize || 3} 
-                          onValueChange={(value) => handleGridSizeChange(index, parseInt(value))}
-                          className="ml-2"
-                        >
-                          <SelectOption value="3">3x3</SelectOption>
-                          <SelectOption value="4">4x4</SelectOption>
-                          <SelectOption value="5">5x5</SelectOption>
-                        </Select>
-                      </div>
-                      <div className="mt-2">
-                        <div className="flex items-center">
-                          <span className="font-medium text-gray-700 capitalize">
-                            Timer Enabled
-                          </span>
-                          <Switch 
-                            checked={block.activity?.gameSettings?.timerEnabled || false} 
-                            onCheckedChange={(enabled) => handleGameTimerToggle(index, enabled)} 
-                            className="ml-2"
-                          />
-                        </div>
-                        {block.activity?.gameSettings?.timerEnabled && (
-                          <div className="mt-2">
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-700 capitalize">
-                                Timer Duration (seconds)
-                              </span>
-                              <Input 
-                                type="number" 
-                                value={block.activity?.gameSettings?.timerDuration || 30} 
-                                onChange={(e) => handleGameTimerDurationChange(index, parseInt(e.target.value))} 
-                                className="ml-2"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 capitalize">
-                      Number of Teams
-                    </span>
-                    <Input 
-                      type="number" 
-                      value={block.activity?.teamMode?.numberOfTeams || 3} 
-                      onChange={(e) => handleNumberOfTeamsChange(index, parseInt(e.target.value))} 
-                      className="ml-2"
-                    />
-                  </div>
-                  {block.activity?.teamMode?.enabled && (
-                    <div className="mt-2">
-                      {block.activity?.teamMode?.teams?.map((team, teamIndex) => (
-                        <div key={team.id} className="flex items-center">
-                          <span className="font-medium text-gray-700 capitalize">
-                            Team {teamIndex + 1}
-                          </span>
-                          <div className="ml-4">
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-700 capitalize">
-                                Team Name
-                              </span>
-                              <Input 
-                                value={team.name} 
-                                onChange={(e) => handleTeamNameChange(index, teamIndex, e.target.value)} 
-                                className="ml-2"
-                              />
-                            </div>
-                            <div className="mt-2">
-                              <div className="flex items-center">
-                                <span className="font-medium text-gray-700 capitalize">
-                                  Team Emoji
-                                </span>
-                                <Input 
-                                  value={team.emoji} 
-                                  onChange={(e) => handleTeamEmojiChange(index, teamIndex, e.target.value)} 
-                                  className="ml-2"
-                                />
-                              </div>
-                              <div className="mt-2">
-                                <div className="flex items-center">
-                                  <span className="font-medium text-gray-700 capitalize">
-                                    Team Color
-                                  </span>
-                                  <Select 
-                                    value={team.color} 
-                                    onValueChange={(value) => handleTeamColorChange(index, teamIndex, value)}
-                                    className="ml-2"
-                                  >
-                                    {COLOR_OPTIONS.map((color) => (
-                                      <SelectOption key={color} value={color}>
-                                        {color}
-                                      </SelectOption>
-                                    ))}
-                                  </Select>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 capitalize">
-                      Game Questions
-                    </span>
-                    <button
-                      type="button"
-                      className="ml-2"
-                      onClick={() => handleAddGameQuestion(index)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {block.activity?.gameQuestions?.map((question, questionIndex) => (
-                    <div key={question.id} className="mt-2">
-                      <div className="flex items-center">
-                        <span className="font-medium text-gray-700 capitalize">
-                          Question {questionIndex + 1}
-                        </span>
-                        <button
-                          type="button"
-                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                          onClick={() => handleRemoveGameQuestion(index, questionIndex)}
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="mt-2">
-                        <div className="flex items-center">
-                          <span className="font-medium text-gray-700 capitalize">
-                            Question Text
-                          </span>
-                          <Input 
-                            value={question.text} 
-                            onChange={(e) => handleGameQuestionChange(index, questionIndex, 'text', e.target.value)} 
-                            className="ml-2"
-                          />
-                        </div>
-                        <div className="mt-2">
-                          <div className="flex items-center">
-                            <span className="font-medium text-gray-700 capitalize">
-                              Question Type
-                            </span>
-                            <Select 
-                              value={question.type} 
-                              onValueChange={(value) => handleGameQuestionTypeChange(index, questionIndex, value)}
-                              className="ml-2"
-                            >
-                              <SelectOption value="text">Text</SelectOption>
-                              <SelectOption value="image">Image</SelectOption>
-                              <SelectOption value="multiple-choice">Multiple Choice</SelectOption>
-                            </Select>
-                          </div>
-                          {question.type === 'multiple-choice' && (
-                            <div className="mt-2">
-                              <div className="flex items-center">
-                                <span className="font-medium text-gray-700 capitalize">
-                                  Options
-                                </span>
-                                <button
-                                  type="button"
-                                  className="ml-2"
-                                  onClick={() => handleAddOption(index, questionIndex)}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </button>
-                              </div>
-                              {question.options?.map((option, optionIndex) => (
-                                <div key={optionIndex} className="mt-2">
-                                  <div className="flex items-center">
-                                    <span className="font-medium text-gray-700 capitalize">
-                                      Option {optionIndex + 1}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                                      onClick={() => handleRemoveOption(index, questionIndex, optionIndex)}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                  <div className="mt-2">
-                                    <Input 
-                                      value={option} 
-                                      onChange={(e) => handleGameQuestionOptionChange(index, questionIndex, optionIndex, e.target.value)} 
-                                      className="ml-2"
-                                    />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          <div className="mt-2">
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-700 capitalize">
-                                Correct Option
-                              </span>
-                              <Input 
-                                type="number" 
-                                value={question.correctOption} 
-                                onChange={(e) => handleGameQuestionCorrectOptionChange(index, questionIndex, parseInt(e.target.value))} 
-                                className="ml-2"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="flex flex-col space-y-6">
-      <div className="flex items-center space-x-2">
-        <ArrowLeft className="cursor-pointer" onClick={onCancel} />
-        <h2 className="text-2xl font-bold">Create New {subject.charAt(0).toUpperCase() + subject.slice(1)} Lesson</h2>
-      </div>
-      
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Lesson Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="title">Lesson Title</Label>
-              <Input 
-                id="title" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
-                placeholder="Enter a title for your lesson"
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea 
-                id="description" 
-                value={description} 
-                onChange={(e) => setDescription(e.target.value)} 
-                placeholder="Briefly describe what students will learn in this lesson"
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label>Learning Type</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                {getLearningTypes().map((type) => (
-                  <div
-                    key={type.id}
-                    className={`${
-                      selectedLearningType === type.id 
-                        ? getSubjectColorClass() 
-                        : 'border-gray-300 bg-white hover:bg-gray-50'
-                    } p-4 border rounded-lg cursor-pointer transition-colors`}
-                    onClick={() => handleLearningTypeChange(type.id)}
-                  >
-                    <div className="flex items-center">
-                      <div className="mr-3">
-                        {type.icon}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{type.title}</h3>
-                        <p className="text-sm text-gray-500">{type.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Lesson Content</CardTitle>
-            <div className="flex space-x-2">
-              <div className="dropdown relative">
-                <Button variant="outline" type="button" className="flex items-center">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Content
-                </Button>
-                <div className="dropdown-menu absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md border border-gray-200 p-1 hidden group-hover:block z-50">
-                  <button 
-                    type="button" 
-                    className="flex w-full items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    onClick={() => handleAddContent('text')}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Text
-                  </button>
-                  <button 
-                    type="button" 
-                    className="flex w-full items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    onClick={() => handleAddContent('image')}
-                  >
-                    <Image className="h-4 w-4 mr-2" />
-                    Image
-                  </button>
-                  <button 
-                    type="button" 
-                    className="flex w-full items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    onClick={() => handleAddContent('imageWithPrompt')}
-                  >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Image with Prompt
-                  </button>
-                  <button 
-                    type="button" 
-                    className="flex w-full items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    onClick={() => handleAddContent('video')}
-                  >
-                    <Video className="h-4 w-4 mr-2" />
-                    Video
-                  </button>
-                  <button 
-                    type="button" 
-                    className="flex w-full items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100"
-                    onClick={() => handleAddContent('activity')}
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    Activity
-                  </button>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {contentBlocks.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
-                  <p>No content blocks added yet. Click "Add Content" to get started.</p>
-                </div>
-              ) : (
-                contentBlocks.map((block, index) => (
-                  <div key={block.id} className="border rounded-lg p-4 relative">
-                    <button
-                      type="button"
-                      className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                      onClick={() => handleRemoveContent(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                    
-                    <div className="mb-2 flex items-center">
-                      <span className="font-medium text-gray-700 capitalize">
-                        {block.type === 'imageWithPrompt' ? 'Image with Prompt' : block.type}
-                      </span>
-                    </div>
-                    
-                    {renderContentBlock(block, index)}
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <div className="flex space-x-4 justify-end">
-          <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-          <Button type="submit">Save Lesson</Button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
-export default LessonBuilder;
