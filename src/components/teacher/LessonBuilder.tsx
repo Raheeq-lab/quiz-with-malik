@@ -936,4 +936,4 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
     }
   };
 
-  const renderContentBlock = (block: LessonContent, index
+  const renderContentBlock = (block: LessonContent
