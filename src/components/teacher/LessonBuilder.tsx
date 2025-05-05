@@ -76,7 +76,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   const videoInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // New game activity state
-  const [gameQuestions, setGameQuestions] = useState<{
+  const [gameQuestions, setGameQuestions] = useState<{\
     id: string;
     text: string;
     imageUrl?: string;
@@ -953,4 +953,3 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
       id: `lesson-${Date.now()}`,
       title,
       description,
-      grade
