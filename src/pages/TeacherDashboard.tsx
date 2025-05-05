@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Book, FileText, Users, BarChart, Laptop, BookText, Lightbulb } from "lucide-react";
+import { Book, FileText, Users, BarChart, Laptop, BookText } from "lucide-react";
 import { Quiz, Lesson, StudentQuizResult, TeacherData } from '@/types/quiz';
 import QuizForm from '@/components/QuizForm';
 import LessonBuilder from '@/components/teacher/LessonBuilder';
@@ -13,7 +13,6 @@ import QuizzesTab from '@/components/teacher/tabs/QuizzesTab';
 import PerformanceTab from '@/components/teacher/tabs/PerformanceTab';
 import QuestionGeneratorTab from '@/components/teacher/tabs/QuestionGeneratorTab';
 import LessonsTab from '@/components/teacher/tabs/LessonsTab';
-import LearningTypesTab from '@/components/teacher/tabs/LearningTypesTab';
 import SubjectSelector from '@/components/SubjectSelector';
 import GradeSelector from '@/components/teacher/GradeSelector';
 import { 
@@ -184,10 +183,6 @@ const TeacherDashboard: React.FC = () => {
                 <FileText size={16} />
                 <span>Lesson Builder</span>
               </TabsTrigger>
-              <TabsTrigger value="learning-types" className="flex items-center gap-2">
-                <Lightbulb size={16} />
-                <span>Learning Types</span>
-              </TabsTrigger>
               <TabsTrigger value="performance" className="flex items-center gap-2">
                 <BarChart size={16} />
                 <span>Performance</span>
@@ -214,10 +209,6 @@ const TeacherDashboard: React.FC = () => {
                 onCopyCode={handleCopyCode} 
                 subject={selectedSubject}
               />
-            </TabsContent>
-
-            <TabsContent value="learning-types">
-              <LearningTypesTab subject={selectedSubject} />
             </TabsContent>
             
             <TabsContent value="performance">
