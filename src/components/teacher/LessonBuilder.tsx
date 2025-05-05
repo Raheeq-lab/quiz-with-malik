@@ -10,7 +10,7 @@ import {
   X, Plus, Trash2, Image, Upload, FileText, BookOpen, Laptop, 
   BookText, Brain, BarChart2, Gamepad2, BriefcaseBusiness, MessageSquare, 
   Pen, Headphones, Pencil, Search, Play, MousePointer, CheckSquare, FileUp, 
-  Video, ArrowLeft, Activity, Timer, Star, Users, Gamepad, GameQuestion as GameQuestionIcon
+  Video, ArrowLeft, Activity, Timer, Star, Users, Gamepad
 } from "lucide-react";
 import { Lesson, LessonContent, ActivitySettings, TeamInfo, GameQuestion } from '@/types/quiz';
 import SubjectSelector from '@/components/SubjectSelector';
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import ActivitySection from './ActivitySection';
 
 interface LearningTypeOption {
   id: string;
@@ -74,7 +75,7 @@ const GAME_TYPES = [
 ];
 
 // Helper function to get subject color class
-const getSubjectColorClass = (subject: "math" | "english" | "ict" = "math") => {
+const getSubjectColorClass = () => {
   switch (subject) {
     case "math": return "text-purple-600";
     case "english": return "text-green-600";
@@ -91,6 +92,7 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
   const [selectedLearningType, setSelectedLearningType] = useState<string>('');
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const videoInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [selectedGrade, setSelectedGrade] = useState<number>(grades[0] || 1);
 
   // New game activity state
   const [gameQuestions, setGameQuestions] = useState<{
@@ -950,3 +952,494 @@ const LessonBuilder: React.FC<LessonBuilderProps> = ({ grades, onSave, onCancel,
         });
         return;
       }
+
+      if (block.type === 'imageWithPrompt' && !block.prompt?.trim()) {
+        toast({
+          title: "Missing prompt",
+          description: `Image prompt block ${i + 1} needs a prompt/question.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    // Create lesson object
+    const lesson: Lesson = {
+      id: `lesson-${Date.now()}`,
+      title,
+      description,
+      gradeLevel: selectedGrade,
+      subject,
+      content: contentBlocks,
+      learningType: selectedLearningType,
+      createdBy: JSON.parse(localStorage.getItem('mathWithMalikTeacher') || '{}').id || 'unknown',
+      createdAt: new Date().toISOString(),
+      accessCode: generateAccessCode(),
+    };
+    
+    onSave(lesson);
+    
+    toast({
+      title: "Lesson saved!",
+      description: "Your lesson has been created successfully.",
+    });
+  };
+  
+  return (
+    <div className="w-full">
+      <div className="flex items-center mb-6">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onCancel} 
+          className="mr-2"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={20} />
+        </Button>
+        <h1 className="text-2xl font-bold">Create New Lesson</h1>
+      </div>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-8">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Lesson Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title">Lesson Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter lesson title"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="grade">Grade Level</Label>
+                  <Select 
+                    value={selectedGrade.toString()} 
+                    onValueChange={(val) => setSelectedGrade(parseInt(val))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select grade level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {grades.map((grade) => (
+                        <SelectItem key={grade} value={grade.toString()}>
+                          Grade {grade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="description">Description (Optional)</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Briefly describe your lesson"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Learning Type Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Learning Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {getLearningTypes().map((type) => (
+                  <div
+                    key={type.id}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedLearningType === type.id
+                        ? 'border-2 border-blue-500 bg-blue-50 shadow-md transform scale-[1.02]'
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleLearningTypeChange(type.id)}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-full bg-gray-100">
+                        {type.icon}
+                      </div>
+                      <h3 className="font-semibold">{type.title}</h3>
+                    </div>
+                    <p className="text-sm text-gray-500">{type.description}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Content Blocks */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Lesson Content</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddContent('text')}
+                >
+                  <Plus size={16} className="mr-1" /> Add Text
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddContent('image')}
+                >
+                  <Plus size={16} className="mr-1" /> Add Image
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddContent('video')}
+                >
+                  <Plus size={16} className="mr-1" /> Add Video
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddContent('activity')}
+                >
+                  <Plus size={16} className="mr-1" /> Add Activity
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {contentBlocks.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <p>Add content blocks to your lesson using the buttons above.</p>
+                  </div>
+                ) : (
+                  contentBlocks.map((block, index) => (
+                    <div key={block.id} className="border rounded-md p-4 relative">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8"
+                        onClick={() => handleRemoveContent(index)}
+                      >
+                        <Trash2 size={16} className="text-red-500" />
+                      </Button>
+                      
+                      {block.type === 'text' && (
+                        <div className="space-y-2">
+                          <Label htmlFor={`text-content-${index}`}>Text Content</Label>
+                          <Textarea
+                            id={`text-content-${index}`}
+                            value={block.content}
+                            onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+                            placeholder="Enter text content..."
+                            rows={4}
+                          />
+                        </div>
+                      )}
+                      
+                      {block.type === 'image' && (
+                        <div className="space-y-4">
+                          <Label>Image</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              ref={(el) => (fileInputRefs.current[index] = el)}
+                              onChange={(e) => handleImageUpload(index, e)}
+                              className="hidden"
+                              id={`image-upload-${index}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => fileInputRefs.current[index]?.click()}
+                            >
+                              <Upload size={16} className="mr-2" />
+                              Upload Image
+                            </Button>
+                            {block.imageUrl && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeImage(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 size={16} className="mr-1" />
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                          {block.imageUrl && (
+                            <div className="mt-2">
+                              <img
+                                src={block.imageUrl}
+                                alt="Content image"
+                                className="max-h-40 object-contain rounded border border-gray-200"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <Label htmlFor={`image-caption-${index}`}>Caption (Optional)</Label>
+                            <Input
+                              id={`image-caption-${index}`}
+                              value={block.content || ''}
+                              onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+                              placeholder="Image caption..."
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {block.type === 'video' && (
+                        <div className="space-y-4">
+                          <Label>Video</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="file"
+                              accept="video/*"
+                              ref={(el) => (videoInputRefs.current[index] = el)}
+                              onChange={(e) => handleVideoUpload(index, e)}
+                              className="hidden"
+                              id={`video-upload-${index}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => videoInputRefs.current[index]?.click()}
+                            >
+                              <Upload size={16} className="mr-2" />
+                              Upload Video
+                            </Button>
+                            {block.videoUrl && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeVideo(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 size={16} className="mr-1" />
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                          {block.videoUrl && (
+                            <div className="mt-2">
+                              <video
+                                src={block.videoUrl}
+                                controls
+                                className="max-h-40 rounded border border-gray-200"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <Label htmlFor={`video-caption-${index}`}>Caption (Optional)</Label>
+                            <Input
+                              id={`video-caption-${index}`}
+                              value={block.content || ''}
+                              onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+                              placeholder="Video caption..."
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {block.type === 'activity' && (
+                        <div className="space-y-4">
+                          <Label>Activity</Label>
+                          <Textarea
+                            value={block.content || ''}
+                            onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+                            placeholder="Activity instructions..."
+                            rows={3}
+                          />
+                          
+                          <ActivitySection 
+                            activity={block.activity || {
+                              activityType: "teacher-led",
+                              teamMode: { enabled: false },
+                              scoring: { enabled: false }
+                            }}
+                            onChange={(updatedActivity) => {
+                              handleContentChange(index, 'activity', updatedActivity);
+                            }}
+                            index={index}
+                          />
+                        </div>
+                      )}
+                      
+                      {block.type === 'imageWithPrompt' && (
+                        <div className="space-y-4">
+                          <Label>Image with Prompt</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              ref={(el) => (fileInputRefs.current[index] = el)}
+                              onChange={(e) => handleImageUpload(index, e)}
+                              className="hidden"
+                              id={`image-upload-${index}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => fileInputRefs.current[index]?.click()}
+                            >
+                              <Upload size={16} className="mr-2" />
+                              Upload Image
+                            </Button>
+                            {block.imageUrl && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeImage(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 size={16} className="mr-1" />
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                          {block.imageUrl && (
+                            <div className="mt-2">
+                              <img
+                                src={block.imageUrl}
+                                alt="Prompt image"
+                                className="max-h-40 object-contain rounded border border-gray-200"
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <Label htmlFor={`prompt-${index}`}>Prompt/Question</Label>
+                            <Textarea
+                              id={`prompt-${index}`}
+                              value={block.prompt || ''}
+                              onChange={(e) => handleContentChange(index, 'prompt', e.target.value)}
+                              placeholder="Enter your question or prompt..."
+                              rows={2}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label>Possible Answers (Optional)</Label>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAddOption(index)}
+                                className="h-8 px-2 text-xs"
+                              >
+                                <Plus size={14} className="mr-1" /> Add Option
+                              </Button>
+                            </div>
+                            
+                            {(block.options || []).map((option, optionIndex) => (
+                              <div key={optionIndex} className="flex items-center gap-2">
+                                <Input
+                                  value={option}
+                                  onChange={(e) => handleOptionChange(index, optionIndex, e.target.value)}
+                                  placeholder={`Option ${optionIndex + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveOption(index, optionIndex)}
+                                  className="h-8 w-8"
+                                >
+                                  <X size={14} className="text-red-500" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {block.type === 'dragAndDrop' && (
+                        <div className="space-y-4">
+                          <Label>Drag and Drop Activity</Label>
+                          <Textarea
+                            value={block.content || ''}
+                            onChange={(e) => handleContentChange(index, 'content', e.target.value)}
+                            placeholder="Instructions for drag and drop activity..."
+                            rows={2}
+                          />
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label>Draggable Items</Label>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAddOption(index)}
+                                className="h-8 px-2 text-xs"
+                              >
+                                <Plus size={14} className="mr-1" /> Add Item
+                              </Button>
+                            </div>
+                            
+                            {(block.options || []).map((option, optionIndex) => (
+                              <div key={optionIndex} className="flex items-center gap-2">
+                                <Input
+                                  value={option}
+                                  onChange={(e) => handleOptionChange(index, optionIndex, e.target.value)}
+                                  placeholder={`Item ${optionIndex + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveOption(index, optionIndex)}
+                                  className="h-8 w-8"
+                                >
+                                  <X size={14} className="text-red-500" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Submit Buttons */}
+          <div className="flex justify-between items-center pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">
+              Save Lesson
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default LessonBuilder;
