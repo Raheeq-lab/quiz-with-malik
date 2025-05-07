@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -826,4 +827,385 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                     <span className="ml-1 text-xs">({lessonStructure.independentPractice.timeInMinutes}m)</span>
                   </TabsTrigger>
                   <TabsTrigger 
-                    value="
+                    value="reflect"
+                    className="data-[state=active]:bg-pink-500 data-[state=active]:text-white"
+                  >
+                    Reflect
+                    <span className="ml-1 text-xs">({lessonStructure.reflect.timeInMinutes}m)</span>
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="engage" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-medium">Engage Phase</h3>
+                      <p className="text-sm text-gray-500">Hook students and activate prior knowledge</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="engageTime" className="mr-2 text-sm">Minutes:</Label>
+                        <Input
+                          id="engageTime"
+                          type="number"
+                          min="1"
+                          max="15"
+                          value={lessonStructure.engage.timeInMinutes}
+                          onChange={(e) => handlePhaseTimeChange("engage", parseInt(e.target.value) || 5)}
+                          className="w-16 h-8 px-2 py-1"
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => setShowPreview(true)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Eye size={16} />
+                        <span>Preview</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {lessonStructure.engage.content.map((content, index) => (
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
+                      {renderContentBlock("engage", content, index)}
+                    </div>
+                  ))}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleAddContent("engage", "text")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Text</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("engage", "image")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Image</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("engage", "video")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Video</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("engage", "activity")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Activity</span>
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="model" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-medium">Model Phase</h3>
+                      <p className="text-sm text-gray-500">Demonstrate and explain new concepts</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="modelTime" className="mr-2 text-sm">Minutes:</Label>
+                        <Input
+                          id="modelTime"
+                          type="number"
+                          min="1"
+                          max="15"
+                          value={lessonStructure.model.timeInMinutes}
+                          onChange={(e) => handlePhaseTimeChange("model", parseInt(e.target.value) || 8)}
+                          className="w-16 h-8 px-2 py-1"
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => setShowPreview(true)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Eye size={16} />
+                        <span>Preview</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {lessonStructure.model.content.map((content, index) => (
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
+                      {renderContentBlock("model", content, index)}
+                    </div>
+                  ))}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleAddContent("model", "text")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Text</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("model", "image")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Image</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("model", "video")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Video</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("model", "resource")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Resource</span>
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="guidedPractice" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-medium">Guided Practice Phase</h3>
+                      <p className="text-sm text-gray-500">Practice with teacher support</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="guidedTime" className="mr-2 text-sm">Minutes:</Label>
+                        <Input
+                          id="guidedTime"
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={lessonStructure.guidedPractice.timeInMinutes}
+                          onChange={(e) => handlePhaseTimeChange("guidedPractice", parseInt(e.target.value) || 12)}
+                          className="w-16 h-8 px-2 py-1"
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => setShowPreview(true)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Eye size={16} />
+                        <span>Preview</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {lessonStructure.guidedPractice.content.map((content, index) => (
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
+                      {renderContentBlock("guidedPractice", content, index)}
+                    </div>
+                  ))}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleAddContent("guidedPractice", "text")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Text</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("guidedPractice", "quiz")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Quiz</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("guidedPractice", "activity")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Activity</span>
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="independentPractice" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-medium">Independent Practice Phase</h3>
+                      <p className="text-sm text-gray-500">Students apply learning independently</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="indTime" className="mr-2 text-sm">Minutes:</Label>
+                        <Input
+                          id="indTime"
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={lessonStructure.independentPractice.timeInMinutes}
+                          onChange={(e) => handlePhaseTimeChange("independentPractice", parseInt(e.target.value) || 10)}
+                          className="w-16 h-8 px-2 py-1"
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => setShowPreview(true)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Eye size={16} />
+                        <span>Preview</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {lessonStructure.independentPractice.content.map((content, index) => (
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
+                      {renderContentBlock("independentPractice", content, index)}
+                    </div>
+                  ))}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleAddContent("independentPractice", "text")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Text</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("independentPractice", "quiz")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Quiz</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("independentPractice", "activity")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Activity</span>
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="reflect" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-medium">Reflect Phase</h3>
+                      <p className="text-sm text-gray-500">Summarize and check for understanding</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="reflectTime" className="mr-2 text-sm">Minutes:</Label>
+                        <Input
+                          id="reflectTime"
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={lessonStructure.reflect.timeInMinutes}
+                          onChange={(e) => handlePhaseTimeChange("reflect", parseInt(e.target.value) || 5)}
+                          className="w-16 h-8 px-2 py-1"
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => setShowPreview(true)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <Eye size={16} />
+                        <span>Preview</span>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {lessonStructure.reflect.content.map((content, index) => (
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
+                      {renderContentBlock("reflect", content, index)}
+                    </div>
+                  ))}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleAddContent("reflect", "text")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Text</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("reflect", "quiz")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Quiz</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("reflect", "activity")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Plus size={16} />
+                      <span>Add Activity</span>
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </CardContent>
+          
+          <CardFooter className="border-t p-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={onCancel}>Cancel</Button>
+            <Button onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" /> Save Lesson
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default ScaffoldedLessonBuilder;
