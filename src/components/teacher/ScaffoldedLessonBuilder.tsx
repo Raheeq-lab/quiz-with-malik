@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -573,7 +574,6 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
               <Progress 
                 value={(currentPhaseIndex + 1) / phases.length * 100} 
                 className="h-2"
-                indicatorClassName={getPhaseProgressColor(currentPhase)}
               />
               <div className="mt-1 text-right text-xs text-gray-500">
                 Progress: {Math.round((currentPhaseIndex + 1) / phases.length * 100)}%
@@ -740,7 +740,6 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
           <CardContent className="space-y-6">
             {/* Lesson Details */}
             <div className="grid md:grid-cols-2 gap-4">
-              {/* ... keep existing code (lesson details inputs) */}
               <div>
                 <Label htmlFor="title">Lesson Title</Label>
                 <Input
@@ -846,7 +845,6 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                 
                 {(["engage", "model", "guidedPractice", "independentPractice", "reflect"] as const).map((phase) => (
                   <TabsContent key={phase} value={phase} className="pt-2">
-                    {/* ... keep existing code (phase content) */}
                     <Card>
                       <CardHeader className={`py-3 ${getPhaseColor(phase)}`}>
                         <div className="flex justify-between items-center">
@@ -867,7 +865,6 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                       </CardHeader>
                       
                       <CardContent className="p-4">
-                        {/* ... keep existing code (phase instructions) */}
                         {phase === "engage" && (
                           <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded mb-4">
                             <p><strong>Engage Phase:</strong> Hook students' interest and activate prior knowledge. Add brief activities, questions, or visuals to spark curiosity about the topic.</p>
@@ -898,7 +895,6 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                           </div>
                         )}
                         
-                        {/* ... keep existing code (content blocks) */}
                         {lessonStructure[phase].content.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-8 text-gray-400">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -917,7 +913,6 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                           </div>
                         )}
                         
-                        {/* ... keep existing code (add content buttons) */}
                         <div className="flex flex-wrap gap-2 mt-6">
                           <Button
                             type="button"

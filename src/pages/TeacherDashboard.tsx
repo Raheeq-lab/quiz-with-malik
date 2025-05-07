@@ -139,8 +139,8 @@ const TeacherDashboard: React.FC = () => {
   const filteredLessons = lessons.filter(lesson => lesson.subject === selectedSubject);
 
   const handleCreateLessonClick = () => {
-    // Show regular lesson builder directly instead of scaffolded
-    setShowLessonBuilder(true);
+    // Show scaffolded lesson builder
+    setShowScaffoldedLessonBuilder(true);
   };
   
   return (
@@ -232,6 +232,13 @@ const TeacherDashboard: React.FC = () => {
             grades={selectedGrades} 
             onSave={handleCreateQuiz}
             onCancel={handleCancelQuizForm}
+            subject={selectedSubject}
+          />
+        ) : showScaffoldedLessonBuilder ? (
+          <ScaffoldedLessonBuilder 
+            grades={selectedGrades} 
+            onSave={handleCreateLesson}
+            onCancel={handleCancelLessonBuilder}
             subject={selectedSubject}
           />
         ) : (
