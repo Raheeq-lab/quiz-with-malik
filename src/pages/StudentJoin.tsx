@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -41,23 +40,51 @@ const StudentJoin: React.FC = () => {
     
     setIsJoining(true);
     
-    // Check if the quiz exists
+    // Get all quizzes from local storage
     const quizzesString = localStorage.getItem('mathWithMalikQuizzes');
-    const quizzes = quizzesString ? JSON.parse(quizzesString) : [];
+    let quizzes = [];
+    
+    try {
+      quizzes = quizzesString ? JSON.parse(quizzesString) : [];
+      console.log("Found quizzes:", quizzes.length);
+      console.log("Looking for access code:", accessCode);
+      
+      // Debug all available access codes
+      if (quizzes.length > 0) {
+        console.log("Available access codes:", quizzes.map((q: any) => q.accessCode));
+      }
+    } catch (error) {
+      console.error("Error parsing quizzes:", error);
+      quizzes = [];
+    }
     
     setTimeout(() => {
       setIsJoining(false);
       
       // Find quiz with matching access code regardless of subject
-      // This change allows students to join quizzes with the correct access code
-      // without being restricted by subject selection
-      const quiz = quizzes.find((q: any) => q.accessCode === accessCode);
+      // Using trim() to ensure no whitespace issues and making case-insensitive comparison
+      const quiz = quizzes.find((q: any) => 
+        q.accessCode && q.accessCode.trim().toUpperCase() === accessCode.trim().toUpperCase()
+      );
       
+      console.log("Quiz found:", quiz ? "Yes" : "No");
+      
+      // Get lessons from local storage
       const lessonsString = localStorage.getItem('mathWithMalikLessons');
-      const lessons = lessonsString ? JSON.parse(lessonsString) : [];
+      let lessons = [];
+      
+      try {
+        lessons = lessonsString ? JSON.parse(lessonsString) : [];
+      } catch (error) {
+        console.error("Error parsing lessons:", error);
+        lessons = [];
+      }
       
       // Find lesson with matching access code regardless of subject
-      const lesson = lessons.find((l: any) => l.accessCode === accessCode);
+      // Using same whitespace and case-insensitive comparison
+      const lesson = lessons.find((l: any) => 
+        l.accessCode && l.accessCode.trim().toUpperCase() === accessCode.trim().toUpperCase()
+      );
       
       if (quiz) {
         // Store student data
@@ -100,6 +127,13 @@ const StudentJoin: React.FC = () => {
           description: "The lesson view is currently being developed.",
         });
       } else {
+        // For debugging, log additional info about what was searched
+        console.log("Access code comparison failed:", {
+          enteredCode: accessCode,
+          quizCount: quizzes.length,
+          lessonCount: lessons.length
+        });
+        
         toast({
           title: "Invalid access code",
           description: `No content found with this access code. Please check and try again.`,
