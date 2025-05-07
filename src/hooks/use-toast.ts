@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -180,7 +181,11 @@ function useToast() {
     }
 
     listeners.add(listener)
-    return () => listeners.delete(listener)
+    
+    // Fix the TypeScript error by properly returning the cleanup function
+    return () => {
+      listeners.delete(listener)
+    }
   }, [])
 
   return {

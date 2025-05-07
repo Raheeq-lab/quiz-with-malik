@@ -45,20 +45,19 @@ const StudentJoin: React.FC = () => {
     const quizzesString = localStorage.getItem('mathWithMalikQuizzes');
     const quizzes = quizzesString ? JSON.parse(quizzesString) : [];
     
-    // Check for both quizzes and lessons with matching access code
-    const quiz = quizzes.find((q: any) => 
-      q.accessCode === accessCode && q.subject === selectedSubject
-    );
-    
-    const lessonsString = localStorage.getItem('mathWithMalikLessons');
-    const lessons = lessonsString ? JSON.parse(lessonsString) : [];
-    
-    const lesson = lessons.find((l: any) => 
-      l.accessCode === accessCode && l.subject === selectedSubject
-    );
-    
     setTimeout(() => {
       setIsJoining(false);
+      
+      // Find quiz with matching access code regardless of subject
+      // This change allows students to join quizzes with the correct access code
+      // without being restricted by subject selection
+      const quiz = quizzes.find((q: any) => q.accessCode === accessCode);
+      
+      const lessonsString = localStorage.getItem('mathWithMalikLessons');
+      const lessons = lessonsString ? JSON.parse(lessonsString) : [];
+      
+      // Find lesson with matching access code regardless of subject
+      const lesson = lessons.find((l: any) => l.accessCode === accessCode);
       
       if (quiz) {
         // Store student data
@@ -103,7 +102,7 @@ const StudentJoin: React.FC = () => {
       } else {
         toast({
           title: "Invalid access code",
-          description: `No ${selectedSubject} content found with this access code. Please check and try again.`,
+          description: `No content found with this access code. Please check and try again.`,
           variant: "destructive",
         });
       }
@@ -175,11 +174,14 @@ const StudentJoin: React.FC = () => {
               </div>
 
               <div className="space-y-2 pt-4">
-                <Label>Select Subject</Label>
+                <Label>Preferred Subject</Label>
                 <SubjectSelector
                   selectedSubject={selectedSubject}
                   onChange={setSelectedSubject}
                 />
+                <p className="text-xs text-gray-500">
+                  Note: You can join any quiz with the correct access code
+                </p>
               </div>
             </CardContent>
             
