@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Clock, CheckCircle, XCircle } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Zap } from "lucide-react";
 import { QuizQuestion, StudentAnswer } from '@/types/quiz';
 import { BookOpen, BookText, Laptop } from "lucide-react";
+import PowerMeter from '@/components/PowerMeter';
 
 interface StudentData {
   name: string;
@@ -27,6 +29,13 @@ const StudentQuiz: React.FC = () => {
   const [score, setScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [startTime] = useState(Date.now());
+  
+  // Power meter state
+  const [power, setPower] = useState(50); // Starting power at 50%
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const maxPower = 100;
   
   // Load student data and quiz
   useEffect(() => {
@@ -154,12 +163,42 @@ const StudentQuiz: React.FC = () => {
     setSelectedOption(optionIndex);
   };
 
+  // Motivation messages based on power level
+  const getMotivationMessage = (power: number): string => {
+    if (power >= 90) return "Incredible! You're unstoppable!";
+    if (power >= 75) return "Amazing! Keep up the great work!";
+    if (power >= 50) return "You're doing well! Keep going!";
+    if (power >= 25) return "You can do better! Focus!";
+    return "Don't give up! Every question is a new chance!";
+  };
+
   const handleNextQuestion = () => {
     if (!quiz) return;
     
     // Save answer
     const currentQuestion = quiz.questions[currentQuestionIndex];
     const isCorrect = selectedOption === currentQuestion.correctOptionIndex;
+    
+    // Update power based on answer
+    const powerChange = isCorrect ? 10 : -5;
+    const newPower = Math.max(0, Math.min(maxPower, power + powerChange));
+    
+    // Set feedback message
+    const feedbackMsg = isCorrect 
+      ? `Correct! +10 Power! ${getMotivationMessage(newPower)}` 
+      : `Incorrect! -5 Power. ${getMotivationMessage(newPower)}`;
+    
+    setFeedbackMessage(feedbackMsg);
+    setShowFeedback(true);
+    setIsAnimating(true);
+    
+    // Update power with animation
+    setPower(newPower);
+    
+    // Play sound effect (will be silent if browser blocks autoplay)
+    const sound = new Audio(isCorrect ? '/correct-sound.mp3' : '/incorrect-sound.mp3');
+    sound.volume = 0.5;
+    sound.play().catch(() => {}); // Catch and ignore autoplay errors
     
     const answer: StudentAnswer = {
       questionId: currentQuestion.id,
@@ -176,16 +215,22 @@ const StudentQuiz: React.FC = () => {
       setScore(prev => prev + 1);
     }
     
-    // Check if this was the last question
-    if (currentQuestionIndex === quiz.questions.length - 1) {
-      // Quiz completed
-      completeQuiz(updatedAnswers);
-    } else {
-      // Move to next question
-      setCurrentQuestionIndex(prev => prev + 1);
-      setSelectedOption(null);
-      setTimeLeft(quiz.timeLimit || 30);
-    }
+    // Hide feedback after 2 seconds
+    setTimeout(() => {
+      setShowFeedback(false);
+      setIsAnimating(false);
+      
+      // Check if this was the last question
+      if (currentQuestionIndex === quiz.questions.length - 1) {
+        // Quiz completed
+        completeQuiz(updatedAnswers);
+      } else {
+        // Move to next question
+        setCurrentQuestionIndex(prev => prev + 1);
+        setSelectedOption(null);
+        setTimeLeft(quiz.timeLimit || 30);
+      }
+    }, 2000);
   };
   
   const completeQuiz = (finalAnswers: StudentAnswer[]) => {
@@ -202,7 +247,8 @@ const StudentQuiz: React.FC = () => {
       totalQuestions: quiz.questions.length,
       timeTaken: totalTimeTaken,
       completedAt: new Date().toISOString(),
-      answers: finalAnswers
+      answers: finalAnswers,
+      finalPower: power // Save the final power level
     };
     
     // Store results
@@ -253,6 +299,20 @@ const StudentQuiz: React.FC = () => {
                 <p className="text-gray-600">Time taken: {formatTime(Math.floor((Date.now() - startTime) / 1000))}</p>
                 <p className="text-gray-600">Questions answered correctly: {score}</p>
                 <p className="text-gray-600">Accuracy: {Math.round((score / quiz?.questions.length) * 100)}%</p>
+                <div className="mt-4">
+                  <p className="text-gray-600 mb-2">Final Power Level:</p>
+                  <PowerMeter power={power} animate={false} />
+                </div>
+              </div>
+              
+              <div className="p-4 border rounded-lg">
+                <p className="font-semibold mb-2">Leaderboard Rank</p>
+                <div className="flex items-center justify-center gap-2 text-xl">
+                  <Zap size={24} className="text-yellow-500" />
+                  <span className="font-bold">
+                    {power >= 80 ? "Superstar!" : power >= 60 ? "Champion!" : power >= 40 ? "Rising Star!" : "Beginner"}
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -294,6 +354,26 @@ const StudentQuiz: React.FC = () => {
       <main className="flex-1 container mx-auto p-4 flex items-center justify-center">
         <Card className="w-full max-w-3xl shadow-lg">
           <CardHeader>
+            <div className="w-full mb-4">
+              <PowerMeter power={power} animate={isAnimating} />
+            </div>
+            
+            {showFeedback && feedbackMessage && (
+              <div className={`p-3 rounded-lg mb-4 text-center animate-fade-in ${
+                feedbackMessage.includes("Correct") 
+                  ? "bg-green-100 text-green-800 border border-green-200" 
+                  : "bg-red-100 text-red-800 border border-red-200"
+              }`}>
+                <div className="flex items-center justify-center gap-2">
+                  {feedbackMessage.includes("Correct") 
+                    ? <CheckCircle size={18} className="text-green-600" /> 
+                    : <XCircle size={18} className="text-red-600" />
+                  }
+                  <p className="font-medium">{feedbackMessage}</p>
+                </div>
+              </div>
+            )}
+            
             <CardTitle className="text-xl">
               {currentQuestion?.text}
             </CardTitle>
@@ -339,7 +419,7 @@ const StudentQuiz: React.FC = () => {
             </div>
             <Button 
               onClick={handleNextQuestion}
-              disabled={selectedOption === null}
+              disabled={selectedOption === null || showFeedback}
               className={colors.button}
             >
               {currentQuestionIndex === quiz?.questions.length - 1 ? "Finish" : "Next"}
