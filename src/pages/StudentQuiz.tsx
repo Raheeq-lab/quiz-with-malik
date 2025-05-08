@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Clock, CheckCircle, XCircle, Zap } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Zap, GaugeCircle } from "lucide-react";
 import { QuizQuestion, StudentAnswer } from '@/types/quiz';
 import { BookOpen, BookText, Laptop } from "lucide-react";
 import PowerMeter from '@/components/PowerMeter';
@@ -355,7 +354,7 @@ const StudentQuiz: React.FC = () => {
         <Card className="w-full max-w-3xl shadow-lg">
           <CardHeader>
             <div className="w-full mb-4">
-              <PowerMeter power={power} animate={isAnimating} />
+              <PowerMeter power={power} animate={isAnimating} showIcon={true} />
             </div>
             
             {showFeedback && feedbackMessage && (
