@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { BookOpen, BookText, Laptop } from 'lucide-react';
 import NavBar from '@/components/NavBar';
 import SubjectSelector from '@/components/SubjectSelector';
+import { Quiz } from '@/types/quiz';
 
 const StudentJoin: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,34 @@ const StudentJoin: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>("math");
   const [isJoining, setIsJoining] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>("");
+  const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([]);
+  
+  // Load quizzes on component mount
+  useEffect(() => {
+    const loadQuizzes = () => {
+      try {
+        const quizzesString = localStorage.getItem('mathWithMalikQuizzes');
+        if (quizzesString) {
+          const loadedQuizzes = JSON.parse(quizzesString);
+          setAvailableQuizzes(loadedQuizzes);
+          
+          if (loadedQuizzes.length > 0) {
+            setDebugInfo(`Loaded ${loadedQuizzes.length} quizzes. Available codes: ${loadedQuizzes.map((q: any) => q.accessCode || 'no-code').join(', ')}`);
+            console.log("Available quizzes:", loadedQuizzes);
+          } else {
+            setDebugInfo("No quizzes found in localStorage");
+          }
+        } else {
+          setDebugInfo("No quizzes found in localStorage (key not found)");
+        }
+      } catch (error) {
+        console.error("Error loading quizzes:", error);
+        setDebugInfo(`Error loading quizzes: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    };
+    
+    loadQuizzes();
+  }, []);
   
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,37 +71,23 @@ const StudentJoin: React.FC = () => {
     
     setIsJoining(true);
     
-    // Get all quizzes from local storage
-    const quizzesString = localStorage.getItem('mathWithMalikQuizzes');
-    let quizzes = [];
+    // Clean up the access code
+    const cleanAccessCode = accessCode.trim().toUpperCase();
+    console.log("Attempting to join with clean code:", cleanAccessCode);
     
-    try {
-      quizzes = quizzesString ? JSON.parse(quizzesString) : [];
-      console.log("Found quizzes:", quizzes.length);
-      console.log("Looking for access code:", accessCode);
-      
-      if (quizzes.length === 0) {
-        setDebugInfo("No quizzes found in local storage.");
-      } else {
-        console.log("Available access codes:", quizzes.map((q: any) => q.accessCode));
-        setDebugInfo(`Found ${quizzes.length} quizzes. Access codes: ${quizzes.map((q: any) => q.accessCode).join(', ')}`);
-      }
-    } catch (error) {
-      console.error("Error parsing quizzes:", error);
-      setDebugInfo(`Error parsing quizzes: ${error instanceof Error ? error.message : String(error)}`);
-      quizzes = [];
-    }
+    // Debug information
+    console.log("All available quizzes:", availableQuizzes);
+    console.log("Available access codes:", availableQuizzes.map(q => q.accessCode?.trim()?.toUpperCase()));
     
     setTimeout(() => {
       setIsJoining(false);
       
       // Find quiz with matching access code regardless of subject
-      const cleanAccessCode = accessCode.trim().toUpperCase();
-      const quiz = quizzes.find((q: any) => 
+      const quiz = availableQuizzes.find(q => 
         q.accessCode && q.accessCode.trim().toUpperCase() === cleanAccessCode
       );
       
-      console.log("Quiz found:", quiz ? "Yes" : "No");
+      console.log("Quiz match found:", quiz ? "Yes" : "No");
       
       // Get lessons from local storage
       const lessonsString = localStorage.getItem('mathWithMalikLessons');
@@ -85,12 +100,22 @@ const StudentJoin: React.FC = () => {
         lessons = [];
       }
       
-      // Find lesson with matching access code regardless of subject
+      // Find lesson with matching access code
       const lesson = lessons.find((l: any) => 
         l.accessCode && l.accessCode.trim().toUpperCase() === cleanAccessCode
       );
       
       if (quiz) {
+        // Confirm the quiz has questions
+        if (!quiz.questions || quiz.questions.length === 0) {
+          toast({
+            title: "Quiz has no questions",
+            description: "This quiz doesn't contain any questions. Please contact your teacher.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         console.log("Joining quiz:", quiz.title, "ID:", quiz.id);
         
         // Store student data
@@ -127,25 +152,19 @@ const StudentJoin: React.FC = () => {
           description: `Welcome to ${lesson.title}. Let's learn!`,
         });
         
-        // For now, navigate to the same page since we haven't implemented the lesson view
         toast({
           title: "Feature Coming Soon",
           description: "The lesson view is currently being developed.",
         });
       } else {
-        // For debugging, log additional info about what was searched
-        console.log("Access code comparison failed:", {
-          enteredCode: accessCode,
-          cleanCode: cleanAccessCode,
-          quizCount: quizzes.length,
-          lessonCount: lessons.length
-        });
+        // Debug information for troubleshooting
+        const availableCodes = availableQuizzes.map(q => q.accessCode?.trim()?.toUpperCase() || 'no-code');
         
-        setDebugInfo(`No match found for code: ${cleanAccessCode}. Available codes: ${quizzes.map((q: any) => q.accessCode).join(', ')}`);
+        setDebugInfo(`No match for: "${cleanAccessCode}". Available: ${availableCodes.join(', ')}`);
         
         toast({
           title: "Invalid access code",
-          description: `No content found with this access code. Please check and try again.`,
+          description: "No quiz or lesson found with this access code. Please check and try again.",
           variant: "destructive",
         });
       }
@@ -209,7 +228,7 @@ const StudentJoin: React.FC = () => {
                   onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                   required
                   maxLength={6}
-                  className="tracking-widest text-center uppercase"
+                  className="tracking-widest text-center uppercase font-mono"
                 />
                 <p className="text-xs text-gray-500">
                   The 6-letter code provided by your teacher
@@ -237,7 +256,7 @@ const StudentJoin: React.FC = () => {
                 {isJoining ? 'Joining...' : 'Join Now'}
               </Button>
               
-              {/* Debug info - only shown during development */}
+              {/* Quiz list for debugging */}
               {debugInfo && (
                 <div className="w-full p-3 bg-red-50 text-red-700 border border-red-200 rounded-md">
                   <p className="font-semibold text-xs">Debug Info:</p>

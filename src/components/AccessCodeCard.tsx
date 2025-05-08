@@ -15,13 +15,16 @@ const AccessCodeCard: React.FC<AccessCodeCardProps> = ({ title, accessCode, onCo
   const [copied, setCopied] = useState(false);
   
   const handleCopy = () => {
-    navigator.clipboard.writeText(accessCode);
-    setCopied(true);
-    onCopy();
-    
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
+    // Ensure we have an access code to copy
+    if (accessCode?.trim()) {
+      navigator.clipboard.writeText(accessCode.trim().toUpperCase());
+      setCopied(true);
+      onCopy();
+      
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    }
   };
 
   // Get color based on subject
@@ -53,7 +56,7 @@ const AccessCodeCard: React.FC<AccessCodeCardProps> = ({ title, accessCode, onCo
       <CardContent>
         <div className="flex items-center justify-center">
           <div className="bg-gray-100 border border-gray-300 rounded-md font-mono text-xl tracking-wider px-4 py-2">
-            {accessCode}
+            {accessCode ? accessCode.toUpperCase() : '------'}
           </div>
         </div>
       </CardContent>
@@ -63,6 +66,7 @@ const AccessCodeCard: React.FC<AccessCodeCardProps> = ({ title, accessCode, onCo
           size="sm"
           className={`w-full gap-2 ${getIconColor()}`}
           onClick={handleCopy}
+          disabled={!accessCode}
         >
           <Copy size={16} />
           {copied ? "Copied!" : "Copy Code"}
