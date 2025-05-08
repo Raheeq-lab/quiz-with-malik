@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ const StudentJoin: React.FC = () => {
   const [accessCode, setAccessCode] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>("math");
   const [isJoining, setIsJoining] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>("");
   
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,12 +51,15 @@ const StudentJoin: React.FC = () => {
       console.log("Found quizzes:", quizzes.length);
       console.log("Looking for access code:", accessCode);
       
-      // Debug all available access codes
-      if (quizzes.length > 0) {
+      if (quizzes.length === 0) {
+        setDebugInfo("No quizzes found in local storage.");
+      } else {
         console.log("Available access codes:", quizzes.map((q: any) => q.accessCode));
+        setDebugInfo(`Found ${quizzes.length} quizzes. Access codes: ${quizzes.map((q: any) => q.accessCode).join(', ')}`);
       }
     } catch (error) {
       console.error("Error parsing quizzes:", error);
+      setDebugInfo(`Error parsing quizzes: ${error instanceof Error ? error.message : String(error)}`);
       quizzes = [];
     }
     
@@ -62,9 +67,9 @@ const StudentJoin: React.FC = () => {
       setIsJoining(false);
       
       // Find quiz with matching access code regardless of subject
-      // Using trim() to ensure no whitespace issues and making case-insensitive comparison
+      const cleanAccessCode = accessCode.trim().toUpperCase();
       const quiz = quizzes.find((q: any) => 
-        q.accessCode && q.accessCode.trim().toUpperCase() === accessCode.trim().toUpperCase()
+        q.accessCode && q.accessCode.trim().toUpperCase() === cleanAccessCode
       );
       
       console.log("Quiz found:", quiz ? "Yes" : "No");
@@ -81,12 +86,13 @@ const StudentJoin: React.FC = () => {
       }
       
       // Find lesson with matching access code regardless of subject
-      // Using same whitespace and case-insensitive comparison
       const lesson = lessons.find((l: any) => 
-        l.accessCode && l.accessCode.trim().toUpperCase() === accessCode.trim().toUpperCase()
+        l.accessCode && l.accessCode.trim().toUpperCase() === cleanAccessCode
       );
       
       if (quiz) {
+        console.log("Joining quiz:", quiz.title, "ID:", quiz.id);
+        
         // Store student data
         const studentData = {
           name: name,
@@ -130,9 +136,12 @@ const StudentJoin: React.FC = () => {
         // For debugging, log additional info about what was searched
         console.log("Access code comparison failed:", {
           enteredCode: accessCode,
+          cleanCode: cleanAccessCode,
           quizCount: quizzes.length,
           lessonCount: lessons.length
         });
+        
+        setDebugInfo(`No match found for code: ${cleanAccessCode}. Available codes: ${quizzes.map((q: any) => q.accessCode).join(', ')}`);
         
         toast({
           title: "Invalid access code",
@@ -219,7 +228,7 @@ const StudentJoin: React.FC = () => {
               </div>
             </CardContent>
             
-            <CardFooter>
+            <CardFooter className="flex-col gap-4">
               <Button 
                 type="submit" 
                 className={`w-full ${getSubjectColor()}`}
@@ -227,6 +236,14 @@ const StudentJoin: React.FC = () => {
               >
                 {isJoining ? 'Joining...' : 'Join Now'}
               </Button>
+              
+              {/* Debug info - only shown during development */}
+              {debugInfo && (
+                <div className="w-full p-3 bg-red-50 text-red-700 border border-red-200 rounded-md">
+                  <p className="font-semibold text-xs">Debug Info:</p>
+                  <p className="text-xs font-mono break-all">{debugInfo}</p>
+                </div>
+              )}
             </CardFooter>
           </form>
         </Card>

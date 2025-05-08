@@ -36,52 +36,84 @@ const StudentQuiz: React.FC = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const maxPower = 100;
   
+  // Debug state
+  const [debugInfo, setDebugInfo] = useState<string>("");
+  
   // Load student data and quiz
   useEffect(() => {
     const loadData = async () => {
-      // Get student data
-      const storedStudentData = localStorage.getItem('mathWithMalikStudent');
-      if (!storedStudentData) {
+      try {
+        // Get student data
+        const storedStudentData = localStorage.getItem('mathWithMalikStudent');
+        if (!storedStudentData) {
+          toast({
+            title: "Error",
+            description: "No student data found. Please join the quiz again.",
+            variant: "destructive",
+          });
+          navigate('/student-join');
+          return;
+        }
+
+        const student = JSON.parse(storedStudentData);
+        setStudentData(student);
+        console.log("Student data loaded:", student);
+        
+        // Get quiz data
+        const storedQuizzes = localStorage.getItem('mathWithMalikQuizzes');
+        if (!storedQuizzes) {
+          toast({
+            title: "Error",
+            description: "No quiz data found. Please contact your teacher.",
+            variant: "destructive",
+          });
+          navigate('/student-join');
+          return;
+        }
+
+        const quizzes = JSON.parse(storedQuizzes);
+        console.log("Available quizzes:", quizzes.length);
+        console.log("Looking for quiz with ID:", student.quizId);
+        
+        const matchingQuiz = quizzes.find((q: any) => q.id === student.quizId);
+        
+        if (!matchingQuiz) {
+          setDebugInfo(`Quiz not found. Student ID: ${student.quizId}, Available quiz IDs: ${quizzes.map((q: any) => q.id).join(', ')}`);
+          toast({
+            title: "Error",
+            description: "Quiz not found. Please contact your teacher.",
+            variant: "destructive",
+          });
+          navigate('/student-join');
+          return;
+        }
+
+        console.log("Found matching quiz:", matchingQuiz.title);
+        console.log("Quiz has questions:", matchingQuiz.questions ? matchingQuiz.questions.length : 0);
+        
+        if (!matchingQuiz.questions || matchingQuiz.questions.length === 0) {
+          toast({
+            title: "Error",
+            description: "This quiz doesn't have any questions. Please contact your teacher.",
+            variant: "destructive",
+          });
+          navigate('/student-join');
+          return;
+        }
+
+        setQuiz(matchingQuiz);
+        setTimeLeft(matchingQuiz.timeLimit || 30); // Default 30 seconds per question if not specified
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading quiz:", error);
+        setDebugInfo(`Error: ${error instanceof Error ? error.message : String(error)}`);
         toast({
           title: "Error",
-          description: "No student data found. Please join the quiz again.",
+          description: "Failed to load quiz data. Please try again.",
           variant: "destructive",
         });
         navigate('/student-join');
-        return;
       }
-
-      const student = JSON.parse(storedStudentData);
-      setStudentData(student);
-      
-      // Get quiz data (in a real app, this would be an API call to Firebase)
-      const storedQuizzes = localStorage.getItem('mathWithMalikQuizzes');
-      if (!storedQuizzes) {
-        toast({
-          title: "Error",
-          description: "No quiz data found. Please contact your teacher.",
-          variant: "destructive",
-        });
-        navigate('/student-join');
-        return;
-      }
-
-      const quizzes = JSON.parse(storedQuizzes);
-      const matchingQuiz = quizzes.find((q: any) => q.id === student.quizId);
-      
-      if (!matchingQuiz) {
-        toast({
-          title: "Error",
-          description: "Quiz not found. Please contact your teacher.",
-          variant: "destructive",
-        });
-        navigate('/student-join');
-        return;
-      }
-
-      setQuiz(matchingQuiz);
-      setTimeLeft(matchingQuiz.timeLimit || 30); // Default 30 seconds per question if not specified
-      setIsLoading(false);
     };
 
     loadData();
@@ -270,10 +302,27 @@ const StudentQuiz: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-quiz-light">
-        <div className="text-center">
-          <p className="text-xl">Loading quiz...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-quiz-light p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl gradient-text">Loading Quiz...</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center py-8">
+            <div className="animate-pulse flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gray-300"></div>
+              <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
+              <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Debug info - only shown during development */}
+        {debugInfo && (
+          <div className="mt-4 p-4 bg-red-50 text-red-800 border border-red-200 rounded-md max-w-md">
+            <p className="font-semibold">Debug Information:</p>
+            <p className="text-sm font-mono break-all">{debugInfo}</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -328,7 +377,32 @@ const StudentQuiz: React.FC = () => {
     );
   }
 
-  const currentQuestion = quiz?.questions[currentQuestionIndex] as QuizQuestion;
+  // Make sure we have a quiz and questions before trying to render
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-quiz-light">
+        <div className="text-center p-8">
+          <p className="text-xl text-red-600">No questions found for this quiz.</p>
+          <Button 
+            className="mt-4"
+            onClick={() => navigate('/student-join')}
+          >
+            Return to Join Page
+          </Button>
+          
+          {/* Debug info */}
+          {debugInfo && (
+            <div className="mt-4 p-4 bg-red-50 text-red-800 border border-red-200 rounded-md">
+              <p className="font-semibold">Debug Information:</p>
+              <p className="text-sm font-mono break-all">{debugInfo}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const currentQuestion = quiz.questions[currentQuestionIndex];
 
   return (
     <div className="min-h-screen flex flex-col bg-quiz-light">
