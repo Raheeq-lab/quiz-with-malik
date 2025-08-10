@@ -107,6 +107,16 @@ export interface LessonPhaseContent {
   resourceUrl?: string;
   aiToolUsed?: string;
   activity?: ActivitySettings; // Added activity settings to lesson phase content
+  // Rich media properties
+  mediaUrl?: string;
+  mediaType?: "image" | "video";
+  altText?: string;
+  caption?: string;
+  credit?: string;
+  posterUrl?: string;
+  sourceType?: "upload" | "youtube" | "vimeo";
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Activity settings interface

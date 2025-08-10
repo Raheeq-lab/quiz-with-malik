@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Plus, Trash2, Clock, BookOpen, Laptop, BookText, Brain, 
-  Play, PenTool, FileText, Download, Save, Eye
+  Play, PenTool, FileText, Download, Save, Eye, Image as ImageIcon, 
+  Video, Activity, GripVertical
 } from "lucide-react";
 import { 
   Lesson, 
@@ -17,13 +18,17 @@ import {
   LessonPhase, 
   LessonPhaseContent,
   QuizQuestion,
-  ActivitySettings
+  ActivitySettings,
+  TeacherData
 } from '@/types/quiz';
 import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import ActivitySection from './ActivitySection';
+import ImageUpload from '../media/ImageUpload';
+import VideoUpload from '../media/VideoUpload';
+import { debounce } from '@/utils/debounce';
 
 interface ScaffoldedLessonBuilderProps {
   grades: number[];
@@ -133,6 +138,63 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
   const [activePhase, setActivePhase] = useState<keyof LessonStructure>("engage");
   const [showPreview, setShowPreview] = useState(false);
   const [activitySettings, setActivitySettings] = useState<ActivitySettings>(initialActivitySettings);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [teacherData, setTeacherData] = useState<TeacherData | null>(null);
+
+  // Get teacher data for permissions
+  useEffect(() => {
+    const storedTeacher = localStorage.getItem('mathWithMalikTeacher');
+    if (storedTeacher) {
+      setTeacherData(JSON.parse(storedTeacher));
+    }
+  }, []);
+
+  // Debounced autosave
+  const debouncedSave = useCallback(
+    debounce(() => {
+      // Save to localStorage for autosave
+      const lessonData = {
+        title,
+        description,
+        gradeLevel,
+        topic,
+        lessonStructure,
+        activitySettings,
+        lastSaved: new Date().toISOString()
+      };
+      localStorage.setItem('mathWithMalikLessonDraft', JSON.stringify(lessonData));
+      setLastSaved(new Date());
+    }, 700),
+    [title, description, gradeLevel, topic, lessonStructure, activitySettings]
+  );
+
+  // Trigger autosave on changes
+  useEffect(() => {
+    if (title || description || topic) {
+      debouncedSave();
+    }
+  }, [title, description, gradeLevel, topic, lessonStructure, activitySettings, debouncedSave]);
+
+  // Load draft on mount
+  useEffect(() => {
+    const draft = localStorage.getItem('mathWithMalikLessonDraft');
+    if (draft) {
+      try {
+        const lessonData = JSON.parse(draft);
+        setTitle(lessonData.title || '');
+        setDescription(lessonData.description || '');
+        setGradeLevel(lessonData.gradeLevel || grades[0] || 1);
+        setTopic(lessonData.topic || '');
+        setLessonStructure(lessonData.lessonStructure || initialLessonStructure);
+        setActivitySettings(lessonData.activitySettings || initialActivitySettings);
+        if (lessonData.lastSaved) {
+          setLastSaved(new Date(lessonData.lastSaved));
+        }
+      } catch (error) {
+        console.error('Failed to load lesson draft:', error);
+      }
+    }
+  }, [grades]);
   
   const aiTools = getAiToolSuggestions(subject);
   const topicSuggestions = getTopicSuggestions(subject, gradeLevel);
@@ -145,7 +207,9 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
     const newContent: LessonPhaseContent = {
       id: `${phase}-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       type,
-      content: ""
+      content: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     
     setLessonStructure(prev => ({
@@ -178,10 +242,31 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
       [phase]: {
         ...prev[phase],
         content: prev[phase].content.map(item => 
-          item.id === contentId ? { ...item, [field]: value } : item
+          item.id === contentId ? { 
+            ...item, 
+            [field]: value,
+            updatedAt: new Date().toISOString()
+          } : item
         )
       }
     }));
+  };
+
+  // Move content within phase
+  const moveContent = (phase: keyof LessonStructure, fromIndex: number, toIndex: number) => {
+    setLessonStructure(prev => {
+      const content = [...prev[phase].content];
+      const [moved] = content.splice(fromIndex, 1);
+      content.splice(toIndex, 0, moved);
+      
+      return {
+        ...prev,
+        [phase]: {
+          ...prev[phase],
+          content
+        }
+      };
+    });
   };
   
   const handlePhaseTimeChange = (phase: keyof LessonStructure, timeInMinutes: number) => {
@@ -305,69 +390,43 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
         
       case "image":
         return (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label>Image</Label>
-              <Button
-                type="button"
-                onClick={() => handleRemoveContent(phase, content.id)}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-red-500"
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-            <Input
-              type="text"
-              value={content.imageUrl || ''}
-              onChange={(e) => handleContentChange(phase, content.id, "imageUrl", e.target.value)}
-              placeholder="Enter image URL"
-            />
-            <Input
-              value={content.content}
-              onChange={(e) => handleContentChange(phase, content.id, "content", e.target.value)}
-              placeholder="Image caption (optional)"
-            />
-            {content.imageUrl && (
-              <div className="mt-2">
-                <img 
-                  src={content.imageUrl} 
-                  alt={content.content || "Lesson image"} 
-                  className="max-h-40 rounded border border-gray-200"
-                />
-              </div>
-            )}
-          </div>
+          <ImageUpload
+            onImageUploaded={(imageData) => {
+              handleContentChange(phase, content.id, "mediaUrl", imageData.url);
+              handleContentChange(phase, content.id, "mediaType", "image");
+              handleContentChange(phase, content.id, "altText", imageData.altText);
+              handleContentChange(phase, content.id, "caption", imageData.caption);
+              handleContentChange(phase, content.id, "credit", imageData.credit);
+            }}
+            onRemove={() => handleRemoveContent(phase, content.id)}
+            initialData={{
+              url: content.mediaUrl,
+              altText: content.altText,
+              caption: content.caption,
+              credit: content.credit
+            }}
+          />
         );
         
       case "video":
         return (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label>Video</Label>
-              <Button
-                type="button"
-                onClick={() => handleRemoveContent(phase, content.id)}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-red-500"
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-            <Input
-              type="text"
-              value={content.videoUrl || ''}
-              onChange={(e) => handleContentChange(phase, content.id, "videoUrl", e.target.value)}
-              placeholder="Enter video URL (YouTube or direct MP4 link)"
-            />
-            <Input
-              value={content.content}
-              onChange={(e) => handleContentChange(phase, content.id, "content", e.target.value)}
-              placeholder="Video title or description"
-            />
-          </div>
+          <VideoUpload
+            onVideoUploaded={(videoData) => {
+              handleContentChange(phase, content.id, "mediaUrl", videoData.url);
+              handleContentChange(phase, content.id, "mediaType", "video");
+              handleContentChange(phase, content.id, "sourceType", videoData.sourceType);
+              handleContentChange(phase, content.id, "content", videoData.title || content.content);
+              handleContentChange(phase, content.id, "posterUrl", videoData.posterUrl);
+            }}
+            onRemove={() => handleRemoveContent(phase, content.id)}
+            initialData={{
+              url: content.mediaUrl,
+              sourceType: content.sourceType,
+              title: content.content,
+              posterUrl: content.posterUrl
+            }}
+            userRole={teacherData?.email ? 'teacher' : 'student'}
+          />
         );
         
       case "quiz":
@@ -597,13 +656,36 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                         {content.type === "text" && (
                           <p>{content.content || "Text content will appear here"}</p>
                         )}
-                        {content.type === "image" && content.imageUrl && (
+                        {content.type === "image" && content.mediaUrl && (
                           <div className="space-y-2">
                             <img 
-                              src={content.imageUrl} 
-                              alt={content.content || "Lesson image"}
+                              src={content.mediaUrl} 
+                              alt={content.altText || "Lesson image"}
                               className="max-h-40 rounded mx-auto" 
                             />
+                            {content.caption && <p className="text-sm text-center italic">{content.caption}</p>}
+                            {content.credit && <p className="text-xs text-center text-muted-foreground">Credit: {content.credit}</p>}
+                          </div>
+                        )}
+                        {content.type === "video" && content.mediaUrl && (
+                          <div className="space-y-2">
+                            {content.sourceType === 'youtube' || content.sourceType === 'vimeo' ? (
+                              <iframe
+                                src={content.mediaUrl}
+                                className="w-full h-48 rounded mx-auto"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            ) : (
+                              <video
+                                src={content.mediaUrl}
+                                poster={content.posterUrl}
+                                controls
+                                className="w-full max-h-48 rounded mx-auto"
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                            )}
                             {content.content && <p className="text-sm text-center">{content.content}</p>}
                           </div>
                         )}
@@ -702,20 +784,28 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
 
   return (
     <div className="w-full">
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onCancel} 
-          className="mr-2"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          {getSubjectIcon()}
-          <span>Scaffolded Lesson Builder</span>
-        </h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onCancel} 
+            className="mr-2"
+            aria-label="Go back"
+          >
+            <ArrowLeft size={20} />
+          </Button>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            {getSubjectIcon()}
+            <span>Scaffolded Lesson Builder</span>
+          </h1>
+        </div>
+        {lastSaved && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Save size={16} />
+            <span>Saved • {lastSaved.toLocaleTimeString()}</span>
+          </div>
+        )}
       </div>
       
       {showPreview ? (
@@ -867,8 +957,18 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                   </div>
                   
                   {lessonStructure.engage.content.map((content, index) => (
-                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
-                      {renderContentBlock("engage", content, index)}
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm group">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-2">
+                          <GripVertical 
+                            size={16} 
+                            className="text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" 
+                          />
+                        </div>
+                        <div className="flex-1">
+                          {renderContentBlock("engage", content, index)}
+                        </div>
+                      </div>
                     </div>
                   ))}
                   
@@ -888,7 +988,7 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                       size="sm"
                       className="flex items-center gap-1"
                     >
-                      <Plus size={16} />
+                      <ImageIcon size={16} />
                       <span>Add Image</span>
                     </Button>
                     <Button
@@ -897,7 +997,7 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                       size="sm"
                       className="flex items-center gap-1"
                     >
-                      <Plus size={16} />
+                      <Video size={16} />
                       <span>Add Video</span>
                     </Button>
                     <Button
@@ -944,8 +1044,18 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                   </div>
                   
                   {lessonStructure.model.content.map((content, index) => (
-                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
-                      {renderContentBlock("model", content, index)}
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm group">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-2">
+                          <GripVertical 
+                            size={16} 
+                            className="text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" 
+                          />
+                        </div>
+                        <div className="flex-1">
+                          {renderContentBlock("model", content, index)}
+                        </div>
+                      </div>
                     </div>
                   ))}
                   
@@ -965,7 +1075,7 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                       size="sm"
                       className="flex items-center gap-1"
                     >
-                      <Plus size={16} />
+                      <ImageIcon size={16} />
                       <span>Add Image</span>
                     </Button>
                     <Button
@@ -974,7 +1084,7 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                       size="sm"
                       className="flex items-center gap-1"
                     >
-                      <Plus size={16} />
+                      <Video size={16} />
                       <span>Add Video</span>
                     </Button>
                     <Button
@@ -1021,8 +1131,15 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                   </div>
                   
                   {lessonStructure.guidedPractice.content.map((content, index) => (
-                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
-                      {renderContentBlock("guidedPractice", content, index)}
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm group">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-2">
+                          <GripVertical size={16} className="text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="flex-1">
+                          {renderContentBlock("guidedPractice", content, index)}
+                        </div>
+                      </div>
                     </div>
                   ))}
                   
@@ -1037,13 +1154,22 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                       <span>Add Text</span>
                     </Button>
                     <Button
-                      onClick={() => handleAddContent("guidedPractice", "quiz")}
+                      onClick={() => handleAddContent("guidedPractice", "image")}
                       variant="outline"
                       size="sm"
                       className="flex items-center gap-1"
                     >
-                      <Plus size={16} />
-                      <span>Add Quiz</span>
+                      <ImageIcon size={16} />
+                      <span>Add Image</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleAddContent("guidedPractice", "video")}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Video size={16} />
+                      <span>Add Video</span>
                     </Button>
                     <Button
                       onClick={() => handleAddContent("guidedPractice", "activity")}
@@ -1051,7 +1177,7 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                       size="sm"
                       className="flex items-center gap-1"
                     >
-                      <Plus size={16} />
+                      <Activity size={16} />
                       <span>Add Activity</span>
                     </Button>
                   </div>
@@ -1089,8 +1215,15 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                   </div>
                   
                   {lessonStructure.independentPractice.content.map((content, index) => (
-                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
-                      {renderContentBlock("independentPractice", content, index)}
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm group">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-2">
+                          <GripVertical size={16} className="text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="flex-1">
+                          {renderContentBlock("independentPractice", content, index)}
+                        </div>
+                      </div>
                     </div>
                   ))}
                   
@@ -1157,8 +1290,15 @@ const ScaffoldedLessonBuilder: React.FC<ScaffoldedLessonBuilderProps> = ({ grade
                   </div>
                   
                   {lessonStructure.reflect.content.map((content, index) => (
-                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm">
-                      {renderContentBlock("reflect", content, index)}
+                    <div key={content.id} className="bg-white rounded-md border p-4 shadow-sm group">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 mt-2">
+                          <GripVertical size={16} className="text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="flex-1">
+                          {renderContentBlock("reflect", content, index)}
+                        </div>
+                      </div>
                     </div>
                   ))}
                   
